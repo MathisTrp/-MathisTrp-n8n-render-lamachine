@@ -286,3 +286,136 @@ input:focus, select:focus {
   font-size: 1.2rem;
   color: var(--texte-doux);
 }
+
+/* Calendrier */
+
+.aide-calendrier {
+  text-align: center;
+  color: var(--texte-doux);
+  font-size: 1.05rem;
+  margin: 0.4rem 0 1.6rem;
+}
+
+.calendrier {
+  background: var(--porcelaine);
+  border-radius: 18px;
+  padding: 1.4rem 1.2rem;
+  box-shadow: 0 10px 26px var(--ombre);
+  border-top: 4px solid var(--or);
+  margin-bottom: 1.6rem;
+}
+
+.calendrier-entete {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.8rem;
+}
+
+.calendrier-entete h3 {
+  font-size: 1.5rem;
+  margin: 0;
+  text-transform: capitalize;
+}
+
+.calendrier-nav {
+  background: var(--rose-doux);
+  border: none;
+  color: var(--texte);
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 50%;
+  font-size: 1.2rem;
+  font-family: inherit;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.calendrier-nav:hover {
+  background: var(--or-clair);
+  color: #fff;
+}
+
+.calendrier-grille {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.3rem;
+}
+
+.calendrier-jours-semaine {
+  margin-bottom: 0.3rem;
+}
+
+.calendrier-jour-semaine {
+  text-align: center;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--texte-doux);
+  text-transform: uppercase;
+}
+
+.calendrier-case {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: none;
+  font: inherit;
+  color: var(--texte);
+  cursor: default;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.calendrier-case-vide {
+  visibility: hidden;
+}
+
+.calendrier-case.avec-cours {
+  cursor: pointer;
+  background: var(--rose-doux);
+}
+
+.calendrier-case.avec-cours:hover {
+  background: var(--rose-poudre);
+}
+
+.calendrier-case.aujourdhui {
+  border-color: var(--or);
+}
+
+.calendrier-case.selectionne {
+  background: var(--or);
+  color: #fff;
+}
+
+.calendrier-numero {
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.calendrier-pastille {
+  position: absolute;
+  bottom: 5px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--or);
+}
+
+.calendrier-case.cours-complet .calendrier-pastille {
+  background: #8d857f;
+}
+
+.calendrier-case.selectionne .calendrier-pastille {
+  background: #fff;
+}
+
+.jour-titre {
+  font-size: 1.3rem;
+  margin: 1.6rem 0 1rem;
+  text-align: center;
+}

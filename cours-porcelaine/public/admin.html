@@ -68,6 +68,19 @@
       margin-top: 1.8rem;
     }
     .form-actions .bouton { margin-top: 0; }
+
+    .calendrier-case {
+      cursor: pointer;
+    }
+    .calendrier-case.cours-ouvert .calendrier-pastille {
+      background: var(--succes);
+    }
+    .calendrier-case.cours-complet .calendrier-pastille {
+      background: var(--erreur);
+    }
+    .jour-admin-carte {
+      margin-top: 1rem;
+    }
   </style>
 </head>
 <body>
@@ -140,6 +153,13 @@
         </form>
       </div>
 
+      <h2 class="section-titre">Vue calendrier</h2>
+      <div class="carte">
+        <div id="calendrier-admin" class="calendrier"></div>
+        <p class="aide-calendrier">Cliquez sur une date avec un cours pour le voir ou le modifier. Cliquez sur une date vide pour créer un cours ce jour-là.</p>
+        <div id="jour-admin"></div>
+      </div>
+
       <h2 class="section-titre">Cours planifiés</h2>
       <div class="carte">
         <div id="liste-admin">
@@ -149,10 +169,16 @@
     </section>
   </div>
 
+  <script src="/calendar.js"></script>
   <script>
     var CLE_SESSION = 'porcelaine_admin_password';
     var motDePasse = sessionStorage.getItem(CLE_SESSION) || '';
     var coursActuels = [];
+
+    var aujourdhui = new Date();
+    var calYear = aujourdhui.getFullYear();
+    var calMonth = aujourdhui.getMonth();
+    var dateSelectionnee = null;
 
     var ecranConnexion = document.getElementById('ecran-connexion');
     var ecranDashboard = document.getElementById('ecran-dashboard');
@@ -162,11 +188,15 @@
 
     var formCours = document.getElementById('form-cours');
     var champId = document.getElementById('cours-id');
+    var champDate = document.getElementById('date');
+    var champTitre = document.getElementById('titre');
     var titreFormulaire = document.getElementById('titre-formulaire');
     var btnEnregistrer = document.getElementById('btn-enregistrer');
     var btnAnnuler = document.getElementById('btn-annuler');
     var messageForm = document.getElementById('message-form');
     var listeAdminEl = document.getElementById('liste-admin');
+    var calendrierAdminEl = document.getElementById('calendrier-admin');
+    var jourAdminEl = document.getElementById('jour-admin');
 
     function appelApi(chemin, options) {
       options = options || {};
@@ -248,41 +278,95 @@
       return texte + ' à ' + heureStr;
     }
 
+    function construireLigneHTML(course) {
+      var statutClasse = course.complet ? 'complet' : 'ouvert';
+      var statutTexte = course.complet ? 'Complet' : 'Ouvert';
+      return (
+        '<tr>' +
+        '<td><strong>' + echapper(course.titre) + '</strong><br><span style="color:var(--texte-doux)">' + echapper(course.niveau) + '</span></td>' +
+        '<td>' + echapper(formaterDateHeure(course.date, course.heure)) + '<br>' + echapper(course.lieu) + '</td>' +
+        '<td>' + echapper(course.prix) + ' €</td>' +
+        '<td>' + echapper(course.inscrits) + ' / ' + echapper(course.places) + '<br><span style="color:var(--texte-doux)">' + echapper(course.placesRestantes) + ' restante(s)</span></td>' +
+        '<td><span class="statut ' + statutClasse + '">' + statutTexte + '</span></td>' +
+        '<td>' +
+        '<button type="button" class="action-btn" data-action="modifier" data-id="' + course.id + '">Modifier</button>' +
+        '<button type="button" class="action-btn supprimer" data-action="supprimer" data-id="' + course.id + '">Supprimer</button>' +
+        '</td>' +
+        '</tr>'
+      );
+    }
+
+    function attacherActionsListe(container) {
+      container.querySelectorAll('[data-action="modifier"]').forEach(function (btn) {
+        btn.addEventListener('click', function () { chargerPourModification(btn.getAttribute('data-id')); });
+      });
+      container.querySelectorAll('[data-action="supprimer"]').forEach(function (btn) {
+        btn.addEventListener('click', function () { supprimerCours(btn.getAttribute('data-id')); });
+      });
+    }
+
     function afficherListe() {
       if (!coursActuels.length) {
         listeAdminEl.innerHTML = '<p class="info">Aucun cours enregistré pour le moment.</p>';
+      } else {
+        var lignes = coursActuels.map(construireLigneHTML).join('');
+        listeAdminEl.innerHTML =
+          '<table><thead><tr>' +
+          '<th>Cours</th><th>Quand / Où</th><th>Prix</th><th>Inscrits</th><th>Statut</th><th>Actions</th>' +
+          '</tr></thead><tbody>' + lignes + '</tbody></table>';
+        attacherActionsListe(listeAdminEl);
+      }
+
+      afficherCalendrierAdmin();
+    }
+
+    function afficherCalendrierAdmin() {
+      var eventsParJour = {};
+      coursActuels.forEach(function (course) {
+        if (!eventsParJour[course.date]) eventsParJour[course.date] = [];
+        eventsParJour[course.date].push(course);
+      });
+
+      CalendrierPorcelaine.creer({
+        container: calendrierAdminEl,
+        year: calYear,
+        month: calMonth,
+        eventsParJour: eventsParJour,
+        dateSelectionnee: dateSelectionnee,
+        onPrev: function () {
+          calMonth -= 1;
+          if (calMonth < 0) { calMonth = 11; calYear -= 1; }
+          afficherCalendrierAdmin();
+        },
+        onNext: function () {
+          calMonth += 1;
+          if (calMonth > 11) { calMonth = 0; calYear += 1; }
+          afficherCalendrierAdmin();
+        },
+        onDayClick: function (dateKey) {
+          dateSelectionnee = dateKey;
+          afficherCalendrierAdmin();
+          afficherJourAdmin(dateKey, eventsParJour[dateKey] || []);
+        },
+      });
+    }
+
+    function afficherJourAdmin(dateKey, coursDuJour) {
+      if (!coursDuJour.length) {
+        reinitialiserFormulaire();
+        champDate.value = dateKey;
+        jourAdminEl.innerHTML = '<p class="info">Aucun cours ce jour-là. La date a été pré-remplie dans le formulaire ci-dessus pour en créer un.</p>';
+        window.scrollTo(0, 0);
+        champTitre.focus();
         return;
       }
 
-      var lignes = coursActuels.map(function (course) {
-        var statutClasse = course.complet ? 'complet' : 'ouvert';
-        var statutTexte = course.complet ? 'Complet' : 'Ouvert';
-        return (
-          '<tr>' +
-          '<td><strong>' + echapper(course.titre) + '</strong><br><span style="color:var(--texte-doux)">' + echapper(course.niveau) + '</span></td>' +
-          '<td>' + echapper(formaterDateHeure(course.date, course.heure)) + '<br>' + echapper(course.lieu) + '</td>' +
-          '<td>' + echapper(course.prix) + ' €</td>' +
-          '<td>' + echapper(course.inscrits) + ' / ' + echapper(course.places) + '<br><span style="color:var(--texte-doux)">' + echapper(course.placesRestantes) + ' restante(s)</span></td>' +
-          '<td><span class="statut ' + statutClasse + '">' + statutTexte + '</span></td>' +
-          '<td>' +
-          '<button type="button" class="action-btn" data-action="modifier" data-id="' + course.id + '">Modifier</button>' +
-          '<button type="button" class="action-btn supprimer" data-action="supprimer" data-id="' + course.id + '">Supprimer</button>' +
-          '</td>' +
-          '</tr>'
-        );
-      }).join('');
-
-      listeAdminEl.innerHTML =
-        '<table><thead><tr>' +
+      var lignes = coursDuJour.map(construireLigneHTML).join('');
+      jourAdminEl.innerHTML =
+        '<div class="jour-admin-carte"><table><thead><tr>' +
         '<th>Cours</th><th>Quand / Où</th><th>Prix</th><th>Inscrits</th><th>Statut</th><th>Actions</th>' +
-        '</tr></thead><tbody>' + lignes + '</tbody></table>';
-
-      listeAdminEl.querySelectorAll('[data-action="modifier"]').forEach(function (btn) {
-        btn.addEventListener('click', function () { chargerPourModification(btn.getAttribute('data-id')); });
-      });
-      listeAdminEl.querySelectorAll('[data-action="supprimer"]').forEach(function (btn) {
-        btn.addEventListener('click', function () { supprimerCours(btn.getAttribute('data-id')); });
-      });
+        '</tr></thead><tbody>' + lignes + '</tbody></table></div>';
+      attacherActionsListe(jourAdminEl);
     }
 
     function chargerPourModification(id) {

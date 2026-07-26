@@ -11,14 +11,17 @@
     <header class="entete">
       <h1>Cours de peinture sur porcelaine</h1>
       <div class="filet-or"></div>
-      <p class="sous-titre">Choisissez un cours pour vous inscrire</p>
+      <p class="sous-titre">Choisissez une date pour vous inscrire</p>
     </header>
 
-    <!-- Écran 1 : liste des cours -->
+    <!-- Écran 1 : calendrier des cours -->
     <section id="ecran-liste">
-      <div id="courses-list">
+      <div id="etat-chargement">
         <p class="info">Chargement des cours…</p>
       </div>
+      <div id="calendrier-public" class="calendrier cache"></div>
+      <p id="aide-calendrier" class="aide-calendrier cache">Cliquez sur une date en couleur pour voir le cours du jour.</p>
+      <div id="jour-selectionne"></div>
     </section>
 
     <!-- Écran 2 : formulaire d'inscription -->
@@ -46,13 +49,21 @@
     </section>
   </div>
 
+  <script src="/calendar.js"></script>
   <script>
     var courses = [];
     var coursChoisi = null;
+    var eventsParJour = {};
+    var calYear = null;
+    var calMonth = null;
+    var dateSelectionnee = null;
 
     var ecranListe = document.getElementById('ecran-liste');
     var ecranForm = document.getElementById('ecran-form');
-    var listeEl = document.getElementById('courses-list');
+    var etatChargement = document.getElementById('etat-chargement');
+    var calendrierEl = document.getElementById('calendrier-public');
+    var aideCalendrier = document.getElementById('aide-calendrier');
+    var jourSelectionneEl = document.getElementById('jour-selectionne');
     var recapEl = document.getElementById('recap-cours');
     var messageEl = document.getElementById('message');
     var form = document.getElementById('form-inscription');
@@ -78,42 +89,99 @@
         .then(function (res) { return res.json(); })
         .then(function (data) {
           courses = data;
-          afficherCours();
+          preparerCalendrier();
         })
         .catch(function () {
-          listeEl.innerHTML = '<p class="info">Impossible de charger les cours pour le moment. Merci de réessayer plus tard.</p>';
+          etatChargement.innerHTML = '<p class="info">Impossible de charger les cours pour le moment. Merci de réessayer plus tard.</p>';
         });
     }
 
-    function afficherCours() {
+    function preparerCalendrier() {
       if (!courses.length) {
-        listeEl.innerHTML = '<p class="info">Aucun cours n\'est ouvert aux inscriptions pour le moment.</p>';
+        etatChargement.innerHTML = '<p class="info">Aucun cours n\'est ouvert aux inscriptions pour le moment.</p>';
         return;
       }
 
-      var html = '';
-      courses.forEach(function (course, index) {
-        var classes = 'course-card' + (course.complet ? ' complet' : '');
-        html += '<button type="button" class="' + classes + '" data-index="' + index + '"' + (course.complet ? ' disabled' : '') + '>';
-        if (course.complet) {
-          html += '<span class="badge">Complet</span>';
-        }
-        html += '<h2>' + echapper(course.titre) + '</h2>';
-        html += '<span class="niveau">' + echapper(course.niveau) + '</span>';
-        html += '<p class="details">' + echapper(formaterDate(course.date)) + ' à ' + echapper(course.heure) + '</p>';
-        html += '<p class="details">' + echapper(course.lieu) + '</p>';
-        html += '<p class="prix">' + echapper(course.prix) + ' €</p>';
-        html += '</button>';
-      });
-      listeEl.innerHTML = html;
+      etatChargement.innerHTML = '';
 
-      var cartes = listeEl.querySelectorAll('.course-card:not([disabled])');
-      cartes.forEach(function (carte) {
-        carte.addEventListener('click', function () {
-          var idx = Number(carte.getAttribute('data-index'));
-          choisirCours(courses[idx]);
-        });
+      eventsParJour = {};
+      courses.forEach(function (course) {
+        if (!eventsParJour[course.date]) eventsParJour[course.date] = [];
+        eventsParJour[course.date].push(course);
       });
+
+      var premiereDate = new Date(courses[0].date + 'T00:00:00');
+      calYear = premiereDate.getFullYear();
+      calMonth = premiereDate.getMonth();
+
+      calendrierEl.classList.remove('cache');
+      aideCalendrier.classList.remove('cache');
+      afficherCalendrier();
+    }
+
+    function afficherCalendrier() {
+      CalendrierPorcelaine.creer({
+        container: calendrierEl,
+        year: calYear,
+        month: calMonth,
+        eventsParJour: eventsParJour,
+        dateSelectionnee: dateSelectionnee,
+        onPrev: function () {
+          calMonth -= 1;
+          if (calMonth < 0) { calMonth = 11; calYear -= 1; }
+          afficherCalendrier();
+        },
+        onNext: function () {
+          calMonth += 1;
+          if (calMonth > 11) { calMonth = 0; calYear += 1; }
+          afficherCalendrier();
+        },
+        onDayClick: function (dateKey) {
+          dateSelectionnee = dateKey;
+          afficherCalendrier();
+          afficherJourSelectionne(dateKey);
+        },
+      });
+    }
+
+    function carteHTML(course) {
+      var classes = 'course-card' + (course.complet ? ' complet' : '');
+      var html = '<button type="button" class="' + classes + '" data-id="' + course.id + '"' + (course.complet ? ' disabled' : '') + '>';
+      if (course.complet) {
+        html += '<span class="badge">Complet</span>';
+      }
+      html += '<h2>' + echapper(course.titre) + '</h2>';
+      html += '<span class="niveau">' + echapper(course.niveau) + '</span>';
+      html += '<p class="details">' + echapper(formaterDate(course.date)) + ' à ' + echapper(course.heure) + '</p>';
+      html += '<p class="details">' + echapper(course.lieu) + '</p>';
+      html += '<p class="prix">' + echapper(course.prix) + ' €</p>';
+      html += '</button>';
+      return html;
+    }
+
+    function afficherJourSelectionne(dateKey) {
+      var coursDuJour = eventsParJour[dateKey] || [];
+
+      if (!coursDuJour.length) {
+        jourSelectionneEl.innerHTML = '<p class="info">Aucun cours prévu à cette date.</p>';
+        return;
+      }
+
+      var html = '<h2 class="jour-titre">' + echapper(formaterDate(dateKey)) + '</h2>';
+      coursDuJour.forEach(function (course) {
+        html += carteHTML(course);
+      });
+      jourSelectionneEl.innerHTML = html;
+
+      coursDuJour.forEach(function (course) {
+        if (course.complet) return;
+        var carte = jourSelectionneEl.querySelector('.course-card[data-id="' + course.id + '"]');
+        if (carte) {
+          carte.addEventListener('click', function () { choisirCours(course); });
+        }
+      });
+
+      jourSelectionneEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 
     function choisirCours(course) {
