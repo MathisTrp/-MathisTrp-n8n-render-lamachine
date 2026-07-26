@@ -17,7 +17,8 @@
  * La réponse contient "hosted_checkout_url", l'URL de paiement à afficher.
  */
 
-const { getCourse, estComplet } = require('./_store');
+const { getCourse, estComplet, incrementInscrits } = require('./_store');
+const { createRegistration } = require('./_registrations');
 
 function readJsonBody(req) {
   return new Promise((resolve, reject) => {
@@ -117,6 +118,21 @@ module.exports = async (req, res) => {
       res.status(502).json({ error: "Le paiement n'a pas pu être initié. Merci de réessayer." });
       return;
     }
+
+    // Enregistre la cliente dès que le paiement est initié, pour que
+    // l'administratrice voie qui s'est inscrite. Tant que le webhook
+    // SumUp (api/webhook.js) n'est pas activé, ceci ne confirme pas que
+    // le paiement a réellement abouti — l'administratrice peut annuler
+    // une inscription depuis l'admin si besoin (ex : paiement abandonné).
+    createRegistration({
+      courseId: course.id,
+      prenom,
+      nom,
+      email,
+      montant: course.prix,
+      checkoutReference,
+    });
+    incrementInscrits(course.id);
 
     res.status(200).json({ checkoutUrl: sumupData.hosted_checkout_url });
   } catch (error) {

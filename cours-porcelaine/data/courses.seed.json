@@ -2,34 +2,57 @@
   {
     "id": "c1",
     "titre": "Initiation à la peinture sur porcelaine",
+    "type": "cours",
     "niveau": "Initiation",
     "prix": 45,
     "date": "2026-08-15",
     "heure": "14:00",
+    "duree": "2 heures",
     "lieu": "Atelier de Mireille, 12 rue des Lilas, Lyon",
     "places": 8,
-    "inscrits": 3
+    "inscrits": 3,
+    "recurrenceId": null
   },
   {
     "id": "c2",
     "titre": "Perfectionnement : les fleurs en camaïeu",
+    "type": "cours",
     "niveau": "Perfectionnement",
     "prix": 55,
     "date": "2026-08-22",
     "heure": "10:00",
+    "duree": "2 heures",
     "lieu": "Atelier de Mireille, 12 rue des Lilas, Lyon",
     "places": 6,
-    "inscrits": 6
+    "inscrits": 6,
+    "recurrenceId": null
   },
   {
     "id": "c3",
     "titre": "Atelier découverte : la dorure à l'or fin",
+    "type": "cours",
     "niveau": "Atelier découverte",
     "prix": 60,
     "date": "2026-09-05",
     "heure": "14:30",
+    "duree": "1 heure",
     "lieu": "Atelier de Mireille, 12 rue des Lilas, Lyon",
     "places": 8,
-    "inscrits": 0
+    "inscrits": 0,
+    "recurrenceId": null
+  },
+  {
+    "id": "c4",
+    "titre": "Stage : une journée autour de la porcelaine",
+    "type": "stage",
+    "niveau": "Perfectionnement",
+    "prix": 120,
+    "date": "2026-09-12",
+    "heure": "09:30",
+    "duree": "Journée complète",
+    "lieu": "Atelier de Mireille, 12 rue des Lilas, Lyon",
+    "places": 6,
+    "inscrits": 1,
+    "recurrenceId": null
   }
 ]

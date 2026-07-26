@@ -1,0 +1,479 @@
+:root {
+  --bg: #f5f6f8;
+  --surface: #ffffff;
+  --border: #e2e5ea;
+  --texte: #1f2430;
+  --texte-doux: #6b7280;
+  --accent: #3949ab;
+  --accent-doux: #eef0fb;
+  --succes: #16803c;
+  --succes-doux: #e7f6ec;
+  --erreur: #b91c1c;
+  --erreur-doux: #fbeaea;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 15px;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  color: var(--texte);
+  background: var(--bg);
+  line-height: 1.5;
+}
+
+h1, h2, h3 {
+  font-family: inherit;
+  font-weight: 700;
+  color: var(--texte);
+  margin: 0;
+}
+
+.page {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 1.75rem 1.5rem 4rem;
+}
+
+/* En-tête */
+
+.entete {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.75rem;
+  padding-bottom: 1.1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.entete-titres h1 {
+  font-size: 1.4rem;
+}
+
+.entete-titres p {
+  margin: 0.2rem 0 0;
+  color: var(--texte-doux);
+  font-size: 0.9rem;
+}
+
+.lien-deconnexion {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--texte-doux);
+  border-radius: 6px;
+  padding: 0.45rem 0.9rem;
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.lien-deconnexion:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* Carte générique */
+
+.carte {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1.4rem 1.5rem;
+}
+
+.section-titre {
+  font-size: 1.05rem;
+  margin: 2.2rem 0 0.9rem;
+}
+
+.section-titre:first-of-type {
+  margin-top: 0;
+}
+
+/* Connexion */
+
+#ecran-connexion .carte {
+  max-width: 380px;
+  margin: 3rem auto 0;
+}
+
+#ecran-connexion h2 {
+  font-size: 1.1rem;
+  margin-bottom: 1.2rem;
+}
+
+/* Statistiques */
+
+.stats-grille {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.9rem;
+  margin-bottom: 0.6rem;
+}
+
+@media (max-width: 800px) {
+  .stats-grille { grid-template-columns: repeat(2, 1fr); }
+}
+
+.stat-carte {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1.1rem 1.2rem;
+}
+
+.stat-valeur {
+  font-size: 1.7rem;
+  font-weight: 700;
+  color: var(--texte);
+}
+
+.stat-label {
+  font-size: 0.82rem;
+  color: var(--texte-doux);
+  margin-top: 0.2rem;
+}
+
+.stats-note {
+  font-size: 0.82rem;
+  color: var(--texte-doux);
+  margin: 0.7rem 0 0;
+}
+
+/* Formulaire */
+
+.grille {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 1rem;
+}
+
+@media (max-width: 640px) {
+  .grille { grid-template-columns: 1fr; }
+}
+
+label {
+  display: block;
+  font-weight: 600;
+  font-size: 0.85rem;
+  margin-bottom: 0.3rem;
+  margin-top: 0.9rem;
+  color: var(--texte-doux);
+}
+
+input, select {
+  width: 100%;
+  font: inherit;
+  font-size: 0.95rem;
+  padding: 0.5rem 0.65rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--texte);
+}
+
+input:focus, select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-doux);
+}
+
+.form-actions {
+  display: flex;
+  gap: 0.6rem;
+  margin-top: 1.3rem;
+}
+
+.bouton {
+  display: inline-block;
+  padding: 0.55rem 1.1rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  font-family: inherit;
+  color: #fff;
+  background: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.bouton:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+
+.bouton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.bouton.secondaire {
+  background: none;
+  color: var(--texte);
+  border-color: var(--border);
+}
+
+.bouton.secondaire:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.bouton.pleine-largeur {
+  display: block;
+  width: 100%;
+}
+
+.message {
+  margin-top: 1rem;
+  padding: 0.6rem 0.8rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.message.erreur {
+  background: var(--erreur-doux);
+  color: var(--erreur);
+}
+
+.message.succes {
+  background: var(--succes-doux);
+  color: var(--succes);
+}
+
+.info {
+  color: var(--texte-doux);
+  font-size: 0.9rem;
+  margin: 0.5rem 0;
+}
+
+.cache {
+  display: none !important;
+}
+
+/* Tableaux */
+
+.table-scroll {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.87rem;
+}
+
+th, td {
+  text-align: left;
+  padding: 0.55rem 0.6rem;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+  white-space: nowrap;
+}
+
+td.col-large {
+  white-space: normal;
+}
+
+th {
+  color: var(--texte-doux);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  font-weight: 700;
+}
+
+tbody tr:hover {
+  background: #fafafa;
+}
+
+.statut {
+  display: inline-block;
+  padding: 0.1rem 0.6rem;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 0.78rem;
+}
+
+.statut.ouvert, .statut.inscrite { background: var(--succes-doux); color: var(--succes); }
+.statut.complet, .statut.annulee { background: var(--erreur-doux); color: var(--erreur); }
+
+.action-btn {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--texte);
+  border-radius: 6px;
+  padding: 0.25rem 0.55rem;
+  font-size: 0.78rem;
+  cursor: pointer;
+  margin-right: 0.3rem;
+  font-family: inherit;
+}
+
+.action-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.action-btn.supprimer, .action-btn.annuler {
+  border-color: var(--erreur);
+  color: var(--erreur);
+}
+
+.action-btn.supprimer:hover, .action-btn.annuler:hover {
+  background: var(--erreur-doux);
+}
+
+/* Filtres inscriptions */
+
+.filtres-inscriptions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+}
+
+.filtres-inscriptions input {
+  flex: 1 1 220px;
+}
+
+.filtres-inscriptions select {
+  flex: 0 0 auto;
+  width: auto;
+}
+
+/* Calendrier (version sobre) */
+
+.aide-calendrier {
+  color: var(--texte-doux);
+  font-size: 0.85rem;
+  margin: 0.6rem 0 0;
+}
+
+.calendrier {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1.1rem 1.1rem 1.3rem;
+}
+
+.calendrier-entete {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.7rem;
+}
+
+.calendrier-entete h3 {
+  font-size: 1rem;
+  margin: 0;
+  text-transform: capitalize;
+}
+
+.calendrier-nav {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--texte);
+  width: 1.8rem;
+  height: 1.8rem;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.calendrier-nav:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.calendrier-grille {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.2rem;
+}
+
+.calendrier-jours-semaine {
+  margin-bottom: 0.2rem;
+}
+
+.calendrier-jour-semaine {
+  text-align: center;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--texte-doux);
+  text-transform: uppercase;
+}
+
+.calendrier-case {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  font: inherit;
+  color: var(--texte);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.calendrier-case:hover {
+  border-color: var(--accent);
+}
+
+.calendrier-case-vide {
+  visibility: hidden;
+  border: none;
+}
+
+.calendrier-case.aujourdhui {
+  border-color: var(--accent);
+  border-width: 2px;
+}
+
+.calendrier-case.selectionne {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+.calendrier-numero {
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.calendrier-pastille {
+  position: absolute;
+  bottom: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--texte-doux);
+}
+
+.calendrier-case.cours-ouvert .calendrier-pastille {
+  background: var(--succes);
+}
+
+.calendrier-case.cours-complet .calendrier-pastille {
+  background: var(--erreur);
+}
+
+.calendrier-case.selectionne .calendrier-pastille {
+  background: #fff;
+}
+
+.jour-admin-carte {
+  margin-top: 1rem;
+}

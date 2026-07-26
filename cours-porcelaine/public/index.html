@@ -152,7 +152,10 @@
       }
       html += '<h2>' + echapper(course.titre) + '</h2>';
       html += '<span class="niveau">' + echapper(course.niveau) + '</span>';
-      html += '<p class="details">' + echapper(formaterDate(course.date)) + ' à ' + echapper(course.heure) + '</p>';
+      if (course.type === 'stage') {
+        html += '<span class="niveau niveau-stage">Stage</span>';
+      }
+      html += '<p class="details">' + echapper(formaterDate(course.date)) + ' à ' + echapper(course.heure) + (course.duree ? ' · ' + echapper(course.duree) : '') + '</p>';
       html += '<p class="details">' + echapper(course.lieu) + '</p>';
       html += '<p class="prix">' + echapper(course.prix) + ' €</p>';
       html += '</button>';
@@ -189,8 +192,8 @@
 
       recapEl.innerHTML =
         '<h2>' + echapper(course.titre) + '</h2>' +
-        '<p>' + echapper(course.niveau) + '</p>' +
-        '<p>' + echapper(formaterDate(course.date)) + ' à ' + echapper(course.heure) + '</p>' +
+        '<p>' + echapper(course.niveau) + (course.type === 'stage' ? ' · Stage' : '') + '</p>' +
+        '<p>' + echapper(formaterDate(course.date)) + ' à ' + echapper(course.heure) + (course.duree ? ' · ' + echapper(course.duree) : '') + '</p>' +
         '<p>' + echapper(course.lieu) + '</p>' +
         '<p><strong>' + echapper(course.prix) + ' €</strong></p>';
 

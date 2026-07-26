@@ -69,13 +69,16 @@ function createCourse(data) {
   const course = {
     id: crypto.randomUUID(),
     titre: data.titre,
+    type: data.type || 'cours',
     niveau: data.niveau,
     prix: Number(data.prix),
     date: data.date,
     heure: data.heure,
+    duree: data.duree || null,
     lieu: data.lieu,
     places: Number(data.places),
     inscrits: 0,
+    recurrenceId: data.recurrenceId || null,
   };
   courses.push(course);
   writeAll(courses);
@@ -91,10 +94,12 @@ function updateCourse(id, data) {
   const updated = {
     ...existing,
     titre: data.titre !== undefined ? data.titre : existing.titre,
+    type: data.type !== undefined ? data.type : existing.type,
     niveau: data.niveau !== undefined ? data.niveau : existing.niveau,
     prix: data.prix !== undefined ? Number(data.prix) : existing.prix,
     date: data.date !== undefined ? data.date : existing.date,
     heure: data.heure !== undefined ? data.heure : existing.heure,
+    duree: data.duree !== undefined ? data.duree : existing.duree,
     lieu: data.lieu !== undefined ? data.lieu : existing.lieu,
     places: data.places !== undefined ? Number(data.places) : existing.places,
     inscrits: data.inscrits !== undefined ? Number(data.inscrits) : existing.inscrits,
@@ -113,11 +118,12 @@ function deleteCourse(id) {
   return true;
 }
 
-function incrementInscrits(id) {
+function incrementInscrits(id, delta) {
+  delta = delta === undefined ? 1 : delta;
   const courses = readAll();
   const index = courses.findIndex((c) => c.id === id);
   if (index === -1) return null;
-  courses[index].inscrits += 1;
+  courses[index].inscrits = Math.max(0, courses[index].inscrits + delta);
   writeAll(courses);
   return courses[index];
 }

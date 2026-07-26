@@ -111,6 +111,12 @@ h1, h2, h3 {
   font-size: 0.95rem;
   font-weight: 700;
   margin-bottom: 0.6rem;
+  margin-right: 0.4rem;
+}
+
+.course-card .niveau.niveau-stage {
+  background: var(--or);
+  color: #fff;
 }
 
 .course-card .details {

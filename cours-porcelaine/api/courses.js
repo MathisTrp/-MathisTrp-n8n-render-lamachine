@@ -28,10 +28,12 @@ module.exports = (req, res) => {
     .map((c) => ({
       id: c.id,
       titre: c.titre,
+      type: c.type || 'cours',
       niveau: c.niveau,
       prix: c.prix,
       date: c.date,
       heure: c.heure,
+      duree: c.duree,
       lieu: c.lieu,
       complet: estComplet(c),
     }));

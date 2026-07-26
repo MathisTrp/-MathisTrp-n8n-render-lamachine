@@ -76,13 +76,22 @@ Il n'y a pas de compte utilisateur ni d'inscription : un seul mot de passe prot�
 
 1. Allez sur `/admin` (par exemple `https://votre-site.vercel.app/admin`).
 2. Entrez le mot de passe administrateur.
-3. Remplissez le formulaire "Créer un cours" : titre, niveau, prix, date, heure, lieu et nombre de places.
-4. Cliquez sur "Créer le cours" : il apparaît aussitôt dans la liste ci-dessous, et sur la page publique d'inscription si sa date n'est pas encore passée.
-5. Vous pouvez à tout moment "Modifier" ou "Supprimer" un cours depuis cette même page, et voir en un coup d'œil le nombre d'inscrits et de places restantes (ces chiffres ne sont jamais visibles côté public — les élèves voient seulement "Ouvert" ou "Complet").
+3. Remplissez le formulaire "Créer un cours" : titre, type (Cours ou Stage), niveau, prix, durée, date, heure, lieu et nombre de places.
+4. Si ce cours se répète (par exemple tous les lundis, ou une semaine sur deux), choisissez la **Récurrence** correspondante et indiquez le nombre de séances à créer : chaque séance est créée comme un cours indépendant, avec ses propres places et inscriptions, mais elles restent reliées entre elles pour pouvoir toutes les supprimer d'un coup avec le bouton "Supprimer la série".
+5. Cliquez sur "Créer le cours" : il apparaît aussitôt dans la liste et sur le calendrier ci-dessous, et sur la page publique d'inscription si sa date n'est pas encore passée.
+6. Vous pouvez à tout moment "Modifier" ou "Supprimer" un cours depuis cette même page, et voir en un coup d'œil le nombre d'inscrits et de places restantes (ces chiffres ne sont jamais visibles côté public — les élèves voient seulement "Ouvert" ou "Complet").
 
 Des cours d'exemple sont déjà présents (`data/courses.seed.json`) pour que vous puissiez tester tout de suite ; vous pouvez les modifier ou les supprimer depuis l'admin dès que vous êtes prête à les remplacer par vos vrais cours.
 
-## 7. Le webhook SumUp (pour plus tard)
+## 7. Le tableau de bord : inscriptions et statistiques
+
+En haut de la page `/admin`, une section "Vue d'ensemble" affiche en un coup d'œil : le nombre de cours à venir, le nombre d'inscriptions actives, le total des réservations en cours et le taux de remplissage moyen.
+
+Plus bas, la section "Inscriptions" liste chaque cliente inscrite (prénom, nom, e-mail, cours, montant, date d'inscription), avec une recherche et un filtre par statut. Une inscription peut être annulée (par exemple si le paiement n'a pas abouti) ce qui libère automatiquement une place sur le cours ; elle peut aussi être réactivée.
+
+Important : une inscription est enregistrée dès que la cliente clique sur "Réserver et payer" et obtient son lien SumUp — pas seulement une fois le paiement confirmé (voir la section suivante sur le webhook). Si une cliente abandonne son paiement en cours de route, pensez à annuler son inscription depuis l'admin pour libérer la place.
+
+## 8. Le webhook SumUp (pour plus tard)
 
 Le fichier `api/webhook.js` contient un squelette prêt à activer : il servira à confirmer automatiquement un paiement et à incrémenter le nombre d'inscrits d'un cours dès que la cliente a réellement payé (plutôt que de faire confiance au simple retour vers la page "Merci"). Les étapes pour l'activer sont détaillées en commentaire dans ce fichier. Tant qu'il n'est pas activé, il se contente de recevoir les notifications de SumUp et de répondre "OK" sans rien faire d'autre — cela ne bloque en rien le fonctionnement du site.
 
@@ -90,26 +99,31 @@ Le fichier `api/webhook.js` contient un squelette prêt à activer : il servira 
 
 ## Bon à savoir sur le stockage des données
 
-Les cours sont enregistrés dans un fichier JSON. Sur Vercel, ce fichier est réécrit dans un dossier temporaire (`/tmp`), ce qui fonctionne bien pour démarrer et pour un usage avec peu de trafic, mais qui **n'est pas garanti de durer indéfiniment** (le dossier peut être réinitialisé lors d'un redéploiement ou après une longue période d'inactivité). Si l'activité du site grandit, il faudra brancher un vrai stockage permanent (Vercel KV, Upstash Redis ou Supabase) — voir les commentaires dans `api/_store.js`, qui expliquent exactement où faire ce changement sans toucher au reste du site.
+Les cours et les inscriptions sont enregistrés dans deux fichiers JSON. Sur Vercel, ces fichiers sont réécrits dans un dossier temporaire (`/tmp`), ce qui fonctionne bien pour démarrer et pour un usage avec peu de trafic, mais qui **n'est pas garanti de durer indéfiniment** (le dossier peut être réinitialisé lors d'un redéploiement ou après une longue période d'inactivité). Si l'activité du site grandit, il faudra brancher un vrai stockage permanent (Vercel KV, Upstash Redis ou Supabase) — voir les commentaires dans `api/_store.js` et `api/_registrations.js`, qui expliquent exactement où faire ce changement sans toucher au reste du site.
 
 ## Structure du projet
 
 ```
 cours-porcelaine/
 ├── public/
-│   ├── index.html       page d'inscription publique
-│   ├── merci.html        page de confirmation après paiement
-│   ├── admin.html         interface d'administration
-│   └── style.css
+│   ├── index.html          page d'inscription publique (avec calendrier)
+│   ├── merci.html           page de confirmation après paiement
+│   ├── admin.html            tableau de bord d'administration
+│   ├── calendar.js             petit module de calendrier réutilisé par les deux pages
+│   ├── style.css                 style de la partie publique
+│   └── admin-style.css            style sobre du tableau de bord admin
 ├── api/
 │   ├── courses.js          GET public : liste des cours (sans places/inscrits)
-│   ├── create-checkout.js  POST public : crée le paiement SumUp
-│   ├── admin-courses.js    GET/POST/PUT/DELETE admin : gestion des cours
+│   ├── create-checkout.js  POST public : crée le paiement SumUp + l'inscription
+│   ├── admin-courses.js    GET/POST/PUT/DELETE admin : gestion des cours (et des séries récurrentes)
+│   ├── admin-registrations.js  GET/PATCH admin : liste des inscriptions, annulation/réactivation
 │   ├── webhook.js           squelette du futur webhook SumUp
 │   ├── _store.js             stockage des cours (fichier JSON)
-│   └── _auth.js               vérification du mot de passe admin
+│   ├── _registrations.js      stockage des inscriptions (fichier JSON)
+│   └── _auth.js                 vérification du mot de passe admin
 ├── data/
-│   └── courses.seed.json     cours de départ (versionnés dans le repo)
+│   ├── courses.seed.json      cours de départ (versionnés dans le repo)
+│   └── registrations.seed.json  inscriptions de départ (vide)
 ├── .env.example
 ├── vercel.json
 └── package.json

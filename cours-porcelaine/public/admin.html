@@ -4,108 +4,60 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Administration — Cours de peinture sur porcelaine</title>
-  <link rel="stylesheet" href="/style.css" />
-  <style>
-    .page-admin {
-      max-width: 900px;
-    }
-    .grille {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 0 1rem;
-    }
-    @media (max-width: 640px) {
-      .grille { grid-template-columns: 1fr; }
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 1rem;
-      font-size: 0.95rem;
-    }
-    th, td {
-      text-align: left;
-      padding: 0.6rem 0.5rem;
-      border-bottom: 1px solid #ecdfd8;
-      vertical-align: top;
-    }
-    th {
-      color: var(--texte-doux);
-      font-size: 0.85rem;
-      text-transform: uppercase;
-      letter-spacing: 0.03em;
-    }
-    .statut {
-      display: inline-block;
-      padding: 0.15rem 0.7rem;
-      border-radius: 999px;
-      font-weight: 700;
-      font-size: 0.85rem;
-    }
-    .statut.ouvert { background: #e7f1e9; color: var(--succes); }
-    .statut.complet { background: #f2e6e6; color: var(--erreur); }
-    .action-btn {
-      background: none;
-      border: 1px solid var(--or);
-      color: var(--texte);
-      border-radius: 8px;
-      padding: 0.3rem 0.6rem;
-      font-size: 0.85rem;
-      cursor: pointer;
-      margin-right: 0.3rem;
-      font-family: inherit;
-    }
-    .action-btn.supprimer {
-      border-color: var(--erreur);
-      color: var(--erreur);
-    }
-    .section-titre {
-      margin-top: 2.5rem;
-    }
-    .form-actions {
-      display: flex;
-      gap: 0.8rem;
-      margin-top: 1.8rem;
-    }
-    .form-actions .bouton { margin-top: 0; }
-
-    .calendrier-case {
-      cursor: pointer;
-    }
-    .calendrier-case.cours-ouvert .calendrier-pastille {
-      background: var(--succes);
-    }
-    .calendrier-case.cours-complet .calendrier-pastille {
-      background: var(--erreur);
-    }
-    .jour-admin-carte {
-      margin-top: 1rem;
-    }
-  </style>
+  <link rel="stylesheet" href="/admin-style.css" />
 </head>
 <body>
-  <div class="page page-admin">
-    <header class="entete">
-      <h1>Espace administration</h1>
-      <div class="filet-or"></div>
-      <p class="sous-titre">Créez et gérez les cours de peinture sur porcelaine</p>
-    </header>
-
+  <div class="page">
     <!-- Écran de connexion -->
     <section id="ecran-connexion">
+      <header class="entete">
+        <div class="entete-titres">
+          <h1>Administration</h1>
+          <p>Cours de peinture sur porcelaine</p>
+        </div>
+      </header>
       <div class="carte">
         <h2>Connexion</h2>
         <label for="mot-de-passe">Mot de passe administrateur</label>
         <input type="password" id="mot-de-passe" autocomplete="current-password" />
-        <button type="button" class="bouton" id="btn-connexion">Se connecter</button>
+        <button type="button" class="bouton pleine-largeur" id="btn-connexion" style="margin-top:1.1rem;">Se connecter</button>
         <div id="message-connexion" class="message erreur cache"></div>
       </div>
     </section>
 
     <!-- Tableau de bord -->
     <section id="ecran-dashboard" class="cache">
+      <header class="entete">
+        <div class="entete-titres">
+          <h1>Administration</h1>
+          <p>Cours de peinture sur porcelaine</p>
+        </div>
+        <button type="button" class="lien-deconnexion" id="btn-deconnexion">Se déconnecter</button>
+      </header>
+
+      <h2 class="section-titre">Vue d'ensemble</h2>
+      <div class="stats-grille">
+        <div class="stat-carte">
+          <div class="stat-valeur" id="stat-cours-a-venir">—</div>
+          <div class="stat-label">Cours à venir</div>
+        </div>
+        <div class="stat-carte">
+          <div class="stat-valeur" id="stat-inscriptions-actives">—</div>
+          <div class="stat-label">Inscriptions actives</div>
+        </div>
+        <div class="stat-carte">
+          <div class="stat-valeur" id="stat-chiffre-affaires">—</div>
+          <div class="stat-label">Total des réservations actives</div>
+        </div>
+        <div class="stat-carte">
+          <div class="stat-valeur" id="stat-taux-remplissage">—</div>
+          <div class="stat-label">Taux de remplissage moyen</div>
+        </div>
+      </div>
+      <p class="stats-note">Ces chiffres reflètent les réservations enregistrées au moment où la cliente lance le paiement SumUp. Tant que le webhook (api/webhook.js) n'est pas activé, le paiement réel n'est pas vérifié automatiquement — annulez une inscription si un paiement n'a pas abouti.</p>
+
+      <h2 class="section-titre">Créer un cours</h2>
       <div class="carte">
-        <h2 id="titre-formulaire">Créer un cours</h2>
         <form id="form-cours">
           <input type="hidden" id="cours-id" value="" />
 
@@ -114,6 +66,13 @@
 
           <div class="grille">
             <div>
+              <label for="type">Type</label>
+              <select id="type" required>
+                <option value="cours">Cours</option>
+                <option value="stage">Stage</option>
+              </select>
+            </div>
+            <div>
               <label for="niveau">Niveau</label>
               <select id="niveau" required>
                 <option value="Initiation">Initiation</option>
@@ -121,9 +80,21 @@
                 <option value="Atelier découverte">Atelier découverte</option>
               </select>
             </div>
+          </div>
+
+          <div class="grille">
             <div>
               <label for="prix">Prix (€)</label>
               <input type="number" id="prix" min="0" step="0.01" required />
+            </div>
+            <div>
+              <label for="duree">Durée</label>
+              <select id="duree" required>
+                <option value="1 heure">1 heure</option>
+                <option value="2 heures">2 heures</option>
+                <option value="Demi-journée">Demi-journée</option>
+                <option value="Journée complète">Journée complète</option>
+              </select>
             </div>
           </div>
 
@@ -133,7 +104,7 @@
               <input type="date" id="date" required />
             </div>
             <div>
-              <label for="heure">Heure</label>
+              <label for="heure">Heure de début</label>
               <input type="time" id="heure" required />
             </div>
           </div>
@@ -141,8 +112,25 @@
           <label for="lieu">Lieu</label>
           <input type="text" id="lieu" required />
 
-          <label for="places">Nombre de places</label>
+          <label for="places">Nombre de places (par séance)</label>
           <input type="number" id="places" min="1" step="1" required />
+
+          <div id="groupe-recurrence">
+            <div class="grille">
+              <div>
+                <label for="recurrence">Récurrence</label>
+                <select id="recurrence">
+                  <option value="aucune">Une seule fois</option>
+                  <option value="hebdomadaire">Toutes les semaines</option>
+                  <option value="quinzomadaire">Une semaine sur deux</option>
+                </select>
+              </div>
+              <div id="champ-nombre-seances" class="cache">
+                <label for="nombre-seances">Nombre de séances</label>
+                <input type="number" id="nombre-seances" min="2" max="52" value="8" />
+              </div>
+            </div>
+          </div>
 
           <div class="form-actions">
             <button type="submit" class="bouton" id="btn-enregistrer">Créer le cours</button>
@@ -153,7 +141,7 @@
         </form>
       </div>
 
-      <h2 class="section-titre">Vue calendrier</h2>
+      <h2 class="section-titre">Calendrier</h2>
       <div class="carte">
         <div id="calendrier-admin" class="calendrier"></div>
         <p class="aide-calendrier">Cliquez sur une date avec un cours pour le voir ou le modifier. Cliquez sur une date vide pour créer un cours ce jour-là.</p>
@@ -162,7 +150,22 @@
 
       <h2 class="section-titre">Cours planifiés</h2>
       <div class="carte">
-        <div id="liste-admin">
+        <div id="liste-admin" class="table-scroll">
+          <p class="info">Chargement…</p>
+        </div>
+      </div>
+
+      <h2 class="section-titre">Inscriptions</h2>
+      <div class="carte">
+        <div class="filtres-inscriptions">
+          <input type="text" id="filtre-recherche" placeholder="Rechercher par nom, e-mail ou cours…" />
+          <select id="filtre-statut">
+            <option value="toutes">Toutes les inscriptions</option>
+            <option value="inscrite">Actives uniquement</option>
+            <option value="annulee">Annulées uniquement</option>
+          </select>
+        </div>
+        <div id="liste-inscriptions" class="table-scroll">
           <p class="info">Chargement…</p>
         </div>
       </div>
@@ -174,6 +177,7 @@
     var CLE_SESSION = 'porcelaine_admin_password';
     var motDePasse = sessionStorage.getItem(CLE_SESSION) || '';
     var coursActuels = [];
+    var inscriptions = [];
 
     var aujourdhui = new Date();
     var calYear = aujourdhui.getFullYear();
@@ -184,19 +188,31 @@
     var ecranDashboard = document.getElementById('ecran-dashboard');
     var champMotDePasse = document.getElementById('mot-de-passe');
     var btnConnexion = document.getElementById('btn-connexion');
+    var btnDeconnexion = document.getElementById('btn-deconnexion');
     var messageConnexion = document.getElementById('message-connexion');
 
     var formCours = document.getElementById('form-cours');
     var champId = document.getElementById('cours-id');
     var champDate = document.getElementById('date');
     var champTitre = document.getElementById('titre');
-    var titreFormulaire = document.getElementById('titre-formulaire');
+    var groupeRecurrence = document.getElementById('groupe-recurrence');
+    var champRecurrence = document.getElementById('recurrence');
+    var champNombreSeances = document.getElementById('nombre-seances');
+    var champNombreSeancesGroupe = document.getElementById('champ-nombre-seances');
     var btnEnregistrer = document.getElementById('btn-enregistrer');
     var btnAnnuler = document.getElementById('btn-annuler');
     var messageForm = document.getElementById('message-form');
     var listeAdminEl = document.getElementById('liste-admin');
     var calendrierAdminEl = document.getElementById('calendrier-admin');
     var jourAdminEl = document.getElementById('jour-admin');
+    var listeInscriptionsEl = document.getElementById('liste-inscriptions');
+    var filtreRecherche = document.getElementById('filtre-recherche');
+    var filtreStatut = document.getElementById('filtre-statut');
+
+    var statCoursAVenir = document.getElementById('stat-cours-a-venir');
+    var statInscriptionsActives = document.getElementById('stat-inscriptions-actives');
+    var statChiffreAffaires = document.getElementById('stat-chiffre-affaires');
+    var statTauxRemplissage = document.getElementById('stat-taux-remplissage');
 
     function appelApi(chemin, options) {
       options = options || {};
@@ -225,23 +241,15 @@
       btnConnexion.disabled = true;
       btnConnexion.textContent = 'Connexion…';
 
-      appelApi('/api/admin-courses')
-        .then(function (res) {
-          if (res.status === 401) {
-            motDePasse = '';
-            throw new Error('Mot de passe incorrect.');
-          }
-          if (!res.ok) throw new Error('Erreur de connexion au serveur.');
-          return res.json();
-        })
-        .then(function (data) {
+      chargerTout()
+        .then(function (ok) {
+          if (!ok) throw new Error('Mot de passe incorrect.');
           sessionStorage.setItem(CLE_SESSION, motDePasse);
-          coursActuels = data;
           ecranConnexion.classList.add('cache');
           ecranDashboard.classList.remove('cache');
-          afficherListe();
         })
         .catch(function (err) {
+          motDePasse = '';
           messageConnexion.textContent = err.message;
           messageConnexion.classList.remove('cache');
         })
@@ -256,41 +264,65 @@
       if (e.key === 'Enter') connecter();
     });
 
-    function chargerListe() {
-      return appelApi('/api/admin-courses')
-        .then(function (res) {
-          if (res.status === 401) {
-            sessionStorage.removeItem(CLE_SESSION);
-            location.reload();
-            return [];
-          }
-          return res.json();
-        })
-        .then(function (data) {
-          coursActuels = data;
+    btnDeconnexion.addEventListener('click', function () {
+      sessionStorage.removeItem(CLE_SESSION);
+      location.reload();
+    });
+
+    champRecurrence.addEventListener('change', function () {
+      champNombreSeancesGroupe.classList.toggle('cache', champRecurrence.value === 'aucune');
+    });
+
+    function chargerTout() {
+      return Promise.all([
+        appelApi('/api/admin-courses'),
+        appelApi('/api/admin-registrations'),
+      ]).then(function (reponses) {
+        var resCourses = reponses[0];
+        var resRegs = reponses[1];
+
+        if (resCourses.status === 401 || resRegs.status === 401) {
+          return false;
+        }
+        if (!resCourses.ok || !resRegs.ok) {
+          throw new Error('Erreur de connexion au serveur.');
+        }
+
+        return Promise.all([resCourses.json(), resRegs.json()]).then(function (data) {
+          coursActuels = data[0];
+          inscriptions = data[1];
           afficherListe();
+          afficherStats();
+          afficherInscriptions();
+          return true;
         });
+      });
     }
 
     function formaterDateHeure(dateStr, heureStr) {
       var d = new Date(dateStr + 'T00:00:00');
       var texte = isNaN(d.getTime()) ? dateStr : d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
-      return texte + ' à ' + heureStr;
+      return texte + (heureStr ? ' à ' + heureStr : '');
     }
 
     function construireLigneHTML(course) {
       var statutClasse = course.complet ? 'complet' : 'ouvert';
       var statutTexte = course.complet ? 'Complet' : 'Ouvert';
+      var typeTexte = course.type === 'stage' ? ' · Stage' : '';
+      var boutonSerie = course.recurrenceId
+        ? '<button type="button" class="action-btn supprimer" data-action="supprimer-serie" data-recurrence-id="' + course.recurrenceId + '">Supprimer la série</button>'
+        : '';
       return (
         '<tr>' +
-        '<td><strong>' + echapper(course.titre) + '</strong><br><span style="color:var(--texte-doux)">' + echapper(course.niveau) + '</span></td>' +
-        '<td>' + echapper(formaterDateHeure(course.date, course.heure)) + '<br>' + echapper(course.lieu) + '</td>' +
+        '<td class="col-large"><strong>' + echapper(course.titre) + '</strong><br><span style="color:var(--texte-doux)">' + echapper(course.niveau) + typeTexte + '</span></td>' +
+        '<td>' + echapper(formaterDateHeure(course.date, course.heure)) + ' · ' + echapper(course.duree || '') + '<br>' + echapper(course.lieu) + '</td>' +
         '<td>' + echapper(course.prix) + ' €</td>' +
         '<td>' + echapper(course.inscrits) + ' / ' + echapper(course.places) + '<br><span style="color:var(--texte-doux)">' + echapper(course.placesRestantes) + ' restante(s)</span></td>' +
         '<td><span class="statut ' + statutClasse + '">' + statutTexte + '</span></td>' +
         '<td>' +
         '<button type="button" class="action-btn" data-action="modifier" data-id="' + course.id + '">Modifier</button>' +
         '<button type="button" class="action-btn supprimer" data-action="supprimer" data-id="' + course.id + '">Supprimer</button>' +
+        boutonSerie +
         '</td>' +
         '</tr>'
       );
@@ -302,6 +334,9 @@
       });
       container.querySelectorAll('[data-action="supprimer"]').forEach(function (btn) {
         btn.addEventListener('click', function () { supprimerCours(btn.getAttribute('data-id')); });
+      });
+      container.querySelectorAll('[data-action="supprimer-serie"]').forEach(function (btn) {
+        btn.addEventListener('click', function () { supprimerSerie(btn.getAttribute('data-recurrence-id')); });
       });
     }
 
@@ -318,6 +353,26 @@
       }
 
       afficherCalendrierAdmin();
+    }
+
+    function afficherStats() {
+      var maintenant = new Date();
+      var coursAVenir = coursActuels.filter(function (c) {
+        return new Date(c.date + 'T' + (c.heure || '00:00')) >= maintenant;
+      });
+
+      var inscriptionsActives = inscriptions.filter(function (r) { return r.statut === 'inscrite'; });
+      var chiffreAffaires = inscriptionsActives.reduce(function (total, r) { return total + (Number(r.montant) || 0); }, 0);
+
+      var coursAvecPlaces = coursActuels.filter(function (c) { return c.places > 0; });
+      var tauxMoyen = coursAvecPlaces.length
+        ? coursAvecPlaces.reduce(function (total, c) { return total + (c.inscrits / c.places); }, 0) / coursAvecPlaces.length
+        : 0;
+
+      statCoursAVenir.textContent = coursAVenir.length;
+      statInscriptionsActives.textContent = inscriptionsActives.length;
+      statChiffreAffaires.textContent = chiffreAffaires.toFixed(2) + ' €';
+      statTauxRemplissage.textContent = Math.round(tauxMoyen * 100) + ' %';
     }
 
     function afficherCalendrierAdmin() {
@@ -363,7 +418,7 @@
 
       var lignes = coursDuJour.map(construireLigneHTML).join('');
       jourAdminEl.innerHTML =
-        '<div class="jour-admin-carte"><table><thead><tr>' +
+        '<div class="jour-admin-carte table-scroll"><table><thead><tr>' +
         '<th>Cours</th><th>Quand / Où</th><th>Prix</th><th>Inscrits</th><th>Statut</th><th>Actions</th>' +
         '</tr></thead><tbody>' + lignes + '</tbody></table></div>';
       attacherActionsListe(jourAdminEl);
@@ -375,27 +430,30 @@
 
       champId.value = course.id;
       document.getElementById('titre').value = course.titre;
+      document.getElementById('type').value = course.type || 'cours';
       document.getElementById('niveau').value = course.niveau;
       document.getElementById('prix').value = course.prix;
+      document.getElementById('duree').value = course.duree || '1 heure';
       document.getElementById('date').value = course.date;
       document.getElementById('heure').value = course.heure;
       document.getElementById('lieu').value = course.lieu;
       document.getElementById('places').value = course.places;
 
-      titreFormulaire.textContent = 'Modifier le cours';
       btnEnregistrer.textContent = 'Enregistrer les modifications';
       btnAnnuler.classList.remove('cache');
       messageForm.classList.add('cache');
+      groupeRecurrence.classList.add('cache');
       window.scrollTo(0, 0);
     }
 
     function reinitialiserFormulaire() {
       formCours.reset();
       champId.value = '';
-      titreFormulaire.textContent = 'Créer un cours';
+      champNombreSeancesGroupe.classList.add('cache');
       btnEnregistrer.textContent = 'Créer le cours';
       btnAnnuler.classList.add('cache');
       messageForm.classList.add('cache');
+      groupeRecurrence.classList.remove('cache');
     }
 
     btnAnnuler.addEventListener('click', reinitialiserFormulaire);
@@ -408,7 +466,21 @@
       appelApi('/api/admin-courses?id=' + encodeURIComponent(id), { method: 'DELETE' })
         .then(function (res) {
           if (!res.ok && res.status !== 204) throw new Error('La suppression a échoué.');
-          return chargerListe();
+          return chargerTout();
+        })
+        .catch(function (err) {
+          window.alert(err.message);
+        });
+    }
+
+    function supprimerSerie(recurrenceId) {
+      var nombre = coursActuels.filter(function (c) { return c.recurrenceId === recurrenceId; }).length;
+      if (!window.confirm('Supprimer définitivement les ' + nombre + ' séances de cette série ?')) return;
+
+      appelApi('/api/admin-courses?recurrenceId=' + encodeURIComponent(recurrenceId), { method: 'DELETE' })
+        .then(function (res) {
+          if (!res.ok && res.status !== 204) throw new Error('La suppression a échoué.');
+          return chargerTout();
         })
         .catch(function (err) {
           window.alert(err.message);
@@ -420,8 +492,10 @@
 
       var donnees = {
         titre: document.getElementById('titre').value.trim(),
+        type: document.getElementById('type').value,
         niveau: document.getElementById('niveau').value,
         prix: Number(document.getElementById('prix').value),
+        duree: document.getElementById('duree').value,
         date: document.getElementById('date').value,
         heure: document.getElementById('heure').value,
         lieu: document.getElementById('lieu').value.trim(),
@@ -431,7 +505,12 @@
       var id = champId.value;
       var estModification = Boolean(id);
 
-      if (estModification) donnees.id = id;
+      if (estModification) {
+        donnees.id = id;
+      } else if (champRecurrence.value !== 'aucune') {
+        donnees.recurrence = champRecurrence.value;
+        donnees.nombreSeances = Number(champNombreSeances.value);
+      }
 
       btnEnregistrer.disabled = true;
 
@@ -444,9 +523,12 @@
         })
         .then(function (result) {
           if (!result.ok) throw new Error((result.data && result.data.error) || 'Erreur lors de l\'enregistrement.');
-          afficherMessageForm(estModification ? 'Cours modifié avec succès.' : 'Cours créé avec succès.', 'succes');
+          var texteSucces = estModification
+            ? 'Cours modifié avec succès.'
+            : (result.data && result.data.series ? result.data.count + ' séances créées avec succès.' : 'Cours créé avec succès.');
+          afficherMessageForm(texteSucces, 'succes');
           reinitialiserFormulaire();
-          return chargerListe();
+          return chargerTout();
         })
         .catch(function (err) {
           afficherMessageForm(err.message, 'erreur');
@@ -456,12 +538,80 @@
         });
     });
 
+    function construireLigneInscriptionHTML(inscription) {
+      var statutTexte = inscription.statut === 'inscrite' ? 'Active' : 'Annulée';
+      var actionLabel = inscription.statut === 'inscrite' ? 'Annuler' : 'Réactiver';
+      var actionClasse = inscription.statut === 'inscrite' ? 'annuler' : '';
+      return (
+        '<tr>' +
+        '<td>' + echapper(inscription.prenom) + ' ' + echapper(inscription.nom) + '</td>' +
+        '<td>' + echapper(inscription.email) + '</td>' +
+        '<td class="col-large">' + echapper(inscription.coursTitre) + '<br><span style="color:var(--texte-doux)">' + echapper(inscription.coursDate ? formaterDateHeure(inscription.coursDate, inscription.coursHeure) : '') + '</span></td>' +
+        '<td>' + echapper(Number(inscription.montant).toFixed(2)) + ' €</td>' +
+        '<td><span class="statut ' + inscription.statut + '">' + statutTexte + '</span></td>' +
+        '<td>' + echapper(new Date(inscription.creeLe).toLocaleDateString('fr-FR')) + '</td>' +
+        '<td><button type="button" class="action-btn ' + actionClasse + '" data-toggle-id="' + inscription.id + '" data-nouveau-statut="' + (inscription.statut === 'inscrite' ? 'annulee' : 'inscrite') + '">' + actionLabel + '</button></td>' +
+        '</tr>'
+      );
+    }
+
+    function afficherInscriptions() {
+      var recherche = filtreRecherche.value.trim().toLowerCase();
+      var statutFiltre = filtreStatut.value;
+
+      var filtrees = inscriptions.filter(function (r) {
+        if (statutFiltre !== 'toutes' && r.statut !== statutFiltre) return false;
+        if (!recherche) return true;
+        var champ = (r.prenom + ' ' + r.nom + ' ' + r.email + ' ' + r.coursTitre).toLowerCase();
+        return champ.indexOf(recherche) !== -1;
+      });
+
+      if (!filtrees.length) {
+        listeInscriptionsEl.innerHTML = '<p class="info">Aucune inscription ne correspond.</p>';
+        return;
+      }
+
+      var lignes = filtrees.map(construireLigneInscriptionHTML).join('');
+      listeInscriptionsEl.innerHTML =
+        '<table><thead><tr>' +
+        '<th>Cliente</th><th>E-mail</th><th>Cours</th><th>Montant</th><th>Statut</th><th>Inscrite le</th><th>Actions</th>' +
+        '</tr></thead><tbody>' + lignes + '</tbody></table>';
+
+      listeInscriptionsEl.querySelectorAll('[data-toggle-id]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          basculerStatutInscription(btn.getAttribute('data-toggle-id'), btn.getAttribute('data-nouveau-statut'));
+        });
+      });
+    }
+
+    function basculerStatutInscription(id, nouveauStatut) {
+      appelApi('/api/admin-registrations', {
+        method: 'PATCH',
+        body: JSON.stringify({ id: id, statut: nouveauStatut }),
+      })
+        .then(function (res) {
+          if (!res.ok) throw new Error('La mise à jour a échoué.');
+          return chargerTout();
+        })
+        .catch(function (err) {
+          window.alert(err.message);
+        });
+    }
+
+    filtreRecherche.addEventListener('input', afficherInscriptions);
+    filtreStatut.addEventListener('change', afficherInscriptions);
+
     // Reconnexion automatique si un mot de passe est déjà en mémoire de session
     if (motDePasse) {
-      chargerListe()
-        .then(function () {
-          ecranConnexion.classList.add('cache');
-          ecranDashboard.classList.remove('cache');
+      chargerTout()
+        .then(function (ok) {
+          if (ok) {
+            ecranConnexion.classList.add('cache');
+            ecranDashboard.classList.remove('cache');
+          } else {
+            motDePasse = '';
+            sessionStorage.removeItem(CLE_SESSION);
+          }
         })
         .catch(function () {
           motDePasse = '';
