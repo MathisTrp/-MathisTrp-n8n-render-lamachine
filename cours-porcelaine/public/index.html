@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Cours de peinture sur porcelaine</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <div class="page">
+    <header class="entete">
+      <h1>Cours de peinture sur porcelaine</h1>
+      <div class="filet-or"></div>
+      <p class="sous-titre">Choisissez un cours pour vous inscrire</p>
+    </header>
+
+    <!-- Écran 1 : liste des cours -->
+    <section id="ecran-liste">
+      <div id="courses-list">
+        <p class="info">Chargement des cours…</p>
+      </div>
+    </section>
+
+    <!-- Écran 2 : formulaire d'inscription -->
+    <section id="ecran-form" class="cache">
+      <button type="button" class="retour" id="btn-retour">&larr; Retour à la liste des cours</button>
+
+      <div class="carte">
+        <div class="recap" id="recap-cours"></div>
+
+        <form id="form-inscription" novalidate>
+          <label for="prenom">Prénom</label>
+          <input type="text" id="prenom" name="prenom" autocomplete="given-name" required />
+
+          <label for="nom">Nom</label>
+          <input type="text" id="nom" name="nom" autocomplete="family-name" required />
+
+          <label for="email">Adresse e-mail</label>
+          <input type="email" id="email" name="email" autocomplete="email" required />
+
+          <button type="submit" class="bouton" id="btn-payer">Réserver et payer</button>
+
+          <div id="message" class="message cache"></div>
+        </form>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    var courses = [];
+    var coursChoisi = null;
+
+    var ecranListe = document.getElementById('ecran-liste');
+    var ecranForm = document.getElementById('ecran-form');
+    var listeEl = document.getElementById('courses-list');
+    var recapEl = document.getElementById('recap-cours');
+    var messageEl = document.getElementById('message');
+    var form = document.getElementById('form-inscription');
+    var btnPayer = document.getElementById('btn-payer');
+    var btnRetour = document.getElementById('btn-retour');
+
+    function echapper(texte) {
+      var div = document.createElement('div');
+      div.textContent = texte == null ? '' : String(texte);
+      return div.innerHTML;
+    }
+
+    function formaterDate(dateStr) {
+      var d = new Date(dateStr + 'T00:00:00');
+      if (isNaN(d.getTime())) return dateStr;
+      var options = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
+      var texte = d.toLocaleDateString('fr-FR', options);
+      return texte.charAt(0).toUpperCase() + texte.slice(1);
+    }
+
+    function chargerCours() {
+      fetch('/api/courses')
+        .then(function (res) { return res.json(); })
+        .then(function (data) {
+          courses = data;
+          afficherCours();
+        })
+        .catch(function () {
+          listeEl.innerHTML = '<p class="info">Impossible de charger les cours pour le moment. Merci de réessayer plus tard.</p>';
+        });
+    }
+
+    function afficherCours() {
+      if (!courses.length) {
+        listeEl.innerHTML = '<p class="info">Aucun cours n\'est ouvert aux inscriptions pour le moment.</p>';
+        return;
+      }
+
+      var html = '';
+      courses.forEach(function (course, index) {
+        var classes = 'course-card' + (course.complet ? ' complet' : '');
+        html += '<button type="button" class="' + classes + '" data-index="' + index + '"' + (course.complet ? ' disabled' : '') + '>';
+        if (course.complet) {
+          html += '<span class="badge">Complet</span>';
+        }
+        html += '<h2>' + echapper(course.titre) + '</h2>';
+        html += '<span class="niveau">' + echapper(course.niveau) + '</span>';
+        html += '<p class="details">' + echapper(formaterDate(course.date)) + ' à ' + echapper(course.heure) + '</p>';
+        html += '<p class="details">' + echapper(course.lieu) + '</p>';
+        html += '<p class="prix">' + echapper(course.prix) + ' €</p>';
+        html += '</button>';
+      });
+      listeEl.innerHTML = html;
+
+      var cartes = listeEl.querySelectorAll('.course-card:not([disabled])');
+      cartes.forEach(function (carte) {
+        carte.addEventListener('click', function () {
+          var idx = Number(carte.getAttribute('data-index'));
+          choisirCours(courses[idx]);
+        });
+      });
+    }
+
+    function choisirCours(course) {
+      coursChoisi = course;
+
+      recapEl.innerHTML =
+        '<h2>' + echapper(course.titre) + '</h2>' +
+        '<p>' + echapper(course.niveau) + '</p>' +
+        '<p>' + echapper(formaterDate(course.date)) + ' à ' + echapper(course.heure) + '</p>' +
+        '<p>' + echapper(course.lieu) + '</p>' +
+        '<p><strong>' + echapper(course.prix) + ' €</strong></p>';
+
+      form.reset();
+      messageEl.classList.add('cache');
+      btnPayer.disabled = false;
+      btnPayer.textContent = 'Réserver et payer';
+
+      ecranListe.classList.add('cache');
+      ecranForm.classList.remove('cache');
+      window.scrollTo(0, 0);
+    }
+
+    function retourListe() {
+      ecranForm.classList.add('cache');
+      ecranListe.classList.remove('cache');
+      coursChoisi = null;
+      window.scrollTo(0, 0);
+    }
+
+    function afficherMessage(texte, type) {
+      messageEl.textContent = texte;
+      messageEl.className = 'message ' + type;
+    }
+
+    btnRetour.addEventListener('click', retourListe);
+
+    form.addEventListener('submit', function (event) {
+      event.preventDefault();
+      if (!coursChoisi) return;
+
+      var prenom = document.getElementById('prenom').value.trim();
+      var nom = document.getElementById('nom').value.trim();
+      var email = document.getElementById('email').value.trim();
+
+      if (!prenom || !nom || !email) {
+        afficherMessage('Merci de remplir votre prénom, votre nom et votre e-mail.', 'erreur');
+        return;
+      }
+
+      btnPayer.disabled = true;
+      btnPayer.textContent = 'Un instant…';
+      messageEl.classList.add('cache');
+
+      fetch('/api/create-checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          courseId: coursChoisi.id,
+          prenom: prenom,
+          nom: nom,
+          email: email,
+        }),
+      })
+        .then(function (res) {
+          return res.json().then(function (data) { return { ok: res.ok, data: data }; });
+        })
+        .then(function (result) {
+          if (!result.ok || !result.data.checkoutUrl) {
+            throw new Error((result.data && result.data.error) || 'Une erreur est survenue.');
+          }
+          window.location.href = result.data.checkoutUrl;
+        })
+        .catch(function (err) {
+          btnPayer.disabled = false;
+          btnPayer.textContent = 'Réserver et payer';
+          afficherMessage(err.message || 'Une erreur est survenue. Merci de réessayer.', 'erreur');
+        });
+    });
+
+    chargerCours();
+  </script>
+</body>
+</html>

@@ -21,3 +21,9 @@ Follow these steps :
 This instance will be free for 90d, then you need to pay 7$/mo for the database.
 
 Created by Antoine Deschamps for La Machine. Inspired by ready4mars.
+
+---
+
+### Autre projet dans ce dépôt
+
+Le dossier [`cours-porcelaine/`](./cours-porcelaine) contient une application distincte : un site d'inscription à des cours de peinture sur porcelaine avec paiement SumUp, déployable sur Vercel. Voir son propre [README](./cours-porcelaine/README.md).

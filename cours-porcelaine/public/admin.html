@@ -1,0 +1,388 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Administration — Cours de peinture sur porcelaine</title>
+  <link rel="stylesheet" href="/style.css" />
+  <style>
+    .page-admin {
+      max-width: 900px;
+    }
+    .grille {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0 1rem;
+    }
+    @media (max-width: 640px) {
+      .grille { grid-template-columns: 1fr; }
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+      font-size: 0.95rem;
+    }
+    th, td {
+      text-align: left;
+      padding: 0.6rem 0.5rem;
+      border-bottom: 1px solid #ecdfd8;
+      vertical-align: top;
+    }
+    th {
+      color: var(--texte-doux);
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+    .statut {
+      display: inline-block;
+      padding: 0.15rem 0.7rem;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 0.85rem;
+    }
+    .statut.ouvert { background: #e7f1e9; color: var(--succes); }
+    .statut.complet { background: #f2e6e6; color: var(--erreur); }
+    .action-btn {
+      background: none;
+      border: 1px solid var(--or);
+      color: var(--texte);
+      border-radius: 8px;
+      padding: 0.3rem 0.6rem;
+      font-size: 0.85rem;
+      cursor: pointer;
+      margin-right: 0.3rem;
+      font-family: inherit;
+    }
+    .action-btn.supprimer {
+      border-color: var(--erreur);
+      color: var(--erreur);
+    }
+    .section-titre {
+      margin-top: 2.5rem;
+    }
+    .form-actions {
+      display: flex;
+      gap: 0.8rem;
+      margin-top: 1.8rem;
+    }
+    .form-actions .bouton { margin-top: 0; }
+  </style>
+</head>
+<body>
+  <div class="page page-admin">
+    <header class="entete">
+      <h1>Espace administration</h1>
+      <div class="filet-or"></div>
+      <p class="sous-titre">Créez et gérez les cours de peinture sur porcelaine</p>
+    </header>
+
+    <!-- Écran de connexion -->
+    <section id="ecran-connexion">
+      <div class="carte">
+        <h2>Connexion</h2>
+        <label for="mot-de-passe">Mot de passe administrateur</label>
+        <input type="password" id="mot-de-passe" autocomplete="current-password" />
+        <button type="button" class="bouton" id="btn-connexion">Se connecter</button>
+        <div id="message-connexion" class="message erreur cache"></div>
+      </div>
+    </section>
+
+    <!-- Tableau de bord -->
+    <section id="ecran-dashboard" class="cache">
+      <div class="carte">
+        <h2 id="titre-formulaire">Créer un cours</h2>
+        <form id="form-cours">
+          <input type="hidden" id="cours-id" value="" />
+
+          <label for="titre">Titre du cours</label>
+          <input type="text" id="titre" required />
+
+          <div class="grille">
+            <div>
+              <label for="niveau">Niveau</label>
+              <select id="niveau" required>
+                <option value="Initiation">Initiation</option>
+                <option value="Perfectionnement">Perfectionnement</option>
+                <option value="Atelier découverte">Atelier découverte</option>
+              </select>
+            </div>
+            <div>
+              <label for="prix">Prix (€)</label>
+              <input type="number" id="prix" min="0" step="0.01" required />
+            </div>
+          </div>
+
+          <div class="grille">
+            <div>
+              <label for="date">Date</label>
+              <input type="date" id="date" required />
+            </div>
+            <div>
+              <label for="heure">Heure</label>
+              <input type="time" id="heure" required />
+            </div>
+          </div>
+
+          <label for="lieu">Lieu</label>
+          <input type="text" id="lieu" required />
+
+          <label for="places">Nombre de places</label>
+          <input type="number" id="places" min="1" step="1" required />
+
+          <div class="form-actions">
+            <button type="submit" class="bouton" id="btn-enregistrer">Créer le cours</button>
+            <button type="button" class="bouton secondaire cache" id="btn-annuler">Annuler la modification</button>
+          </div>
+
+          <div id="message-form" class="message cache"></div>
+        </form>
+      </div>
+
+      <h2 class="section-titre">Cours planifiés</h2>
+      <div class="carte">
+        <div id="liste-admin">
+          <p class="info">Chargement…</p>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    var CLE_SESSION = 'porcelaine_admin_password';
+    var motDePasse = sessionStorage.getItem(CLE_SESSION) || '';
+    var coursActuels = [];
+
+    var ecranConnexion = document.getElementById('ecran-connexion');
+    var ecranDashboard = document.getElementById('ecran-dashboard');
+    var champMotDePasse = document.getElementById('mot-de-passe');
+    var btnConnexion = document.getElementById('btn-connexion');
+    var messageConnexion = document.getElementById('message-connexion');
+
+    var formCours = document.getElementById('form-cours');
+    var champId = document.getElementById('cours-id');
+    var titreFormulaire = document.getElementById('titre-formulaire');
+    var btnEnregistrer = document.getElementById('btn-enregistrer');
+    var btnAnnuler = document.getElementById('btn-annuler');
+    var messageForm = document.getElementById('message-form');
+    var listeAdminEl = document.getElementById('liste-admin');
+
+    function appelApi(chemin, options) {
+      options = options || {};
+      var headers = Object.assign({}, options.headers, { 'x-admin-password': motDePasse });
+      if (options.body) headers['Content-Type'] = 'application/json';
+      return fetch(chemin, Object.assign({}, options, { headers: headers }));
+    }
+
+    function echapper(texte) {
+      var div = document.createElement('div');
+      div.textContent = texte == null ? '' : String(texte);
+      return div.innerHTML;
+    }
+
+    function afficherMessageForm(texte, type) {
+      messageForm.textContent = texte;
+      messageForm.className = 'message ' + type;
+    }
+
+    function connecter() {
+      var saisie = champMotDePasse.value;
+      if (!saisie) return;
+
+      motDePasse = saisie;
+      messageConnexion.classList.add('cache');
+      btnConnexion.disabled = true;
+      btnConnexion.textContent = 'Connexion…';
+
+      appelApi('/api/admin-courses')
+        .then(function (res) {
+          if (res.status === 401) {
+            motDePasse = '';
+            throw new Error('Mot de passe incorrect.');
+          }
+          if (!res.ok) throw new Error('Erreur de connexion au serveur.');
+          return res.json();
+        })
+        .then(function (data) {
+          sessionStorage.setItem(CLE_SESSION, motDePasse);
+          coursActuels = data;
+          ecranConnexion.classList.add('cache');
+          ecranDashboard.classList.remove('cache');
+          afficherListe();
+        })
+        .catch(function (err) {
+          messageConnexion.textContent = err.message;
+          messageConnexion.classList.remove('cache');
+        })
+        .finally(function () {
+          btnConnexion.disabled = false;
+          btnConnexion.textContent = 'Se connecter';
+        });
+    }
+
+    btnConnexion.addEventListener('click', connecter);
+    champMotDePasse.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') connecter();
+    });
+
+    function chargerListe() {
+      return appelApi('/api/admin-courses')
+        .then(function (res) {
+          if (res.status === 401) {
+            sessionStorage.removeItem(CLE_SESSION);
+            location.reload();
+            return [];
+          }
+          return res.json();
+        })
+        .then(function (data) {
+          coursActuels = data;
+          afficherListe();
+        });
+    }
+
+    function formaterDateHeure(dateStr, heureStr) {
+      var d = new Date(dateStr + 'T00:00:00');
+      var texte = isNaN(d.getTime()) ? dateStr : d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+      return texte + ' à ' + heureStr;
+    }
+
+    function afficherListe() {
+      if (!coursActuels.length) {
+        listeAdminEl.innerHTML = '<p class="info">Aucun cours enregistré pour le moment.</p>';
+        return;
+      }
+
+      var lignes = coursActuels.map(function (course) {
+        var statutClasse = course.complet ? 'complet' : 'ouvert';
+        var statutTexte = course.complet ? 'Complet' : 'Ouvert';
+        return (
+          '<tr>' +
+          '<td><strong>' + echapper(course.titre) + '</strong><br><span style="color:var(--texte-doux)">' + echapper(course.niveau) + '</span></td>' +
+          '<td>' + echapper(formaterDateHeure(course.date, course.heure)) + '<br>' + echapper(course.lieu) + '</td>' +
+          '<td>' + echapper(course.prix) + ' €</td>' +
+          '<td>' + echapper(course.inscrits) + ' / ' + echapper(course.places) + '<br><span style="color:var(--texte-doux)">' + echapper(course.placesRestantes) + ' restante(s)</span></td>' +
+          '<td><span class="statut ' + statutClasse + '">' + statutTexte + '</span></td>' +
+          '<td>' +
+          '<button type="button" class="action-btn" data-action="modifier" data-id="' + course.id + '">Modifier</button>' +
+          '<button type="button" class="action-btn supprimer" data-action="supprimer" data-id="' + course.id + '">Supprimer</button>' +
+          '</td>' +
+          '</tr>'
+        );
+      }).join('');
+
+      listeAdminEl.innerHTML =
+        '<table><thead><tr>' +
+        '<th>Cours</th><th>Quand / Où</th><th>Prix</th><th>Inscrits</th><th>Statut</th><th>Actions</th>' +
+        '</tr></thead><tbody>' + lignes + '</tbody></table>';
+
+      listeAdminEl.querySelectorAll('[data-action="modifier"]').forEach(function (btn) {
+        btn.addEventListener('click', function () { chargerPourModification(btn.getAttribute('data-id')); });
+      });
+      listeAdminEl.querySelectorAll('[data-action="supprimer"]').forEach(function (btn) {
+        btn.addEventListener('click', function () { supprimerCours(btn.getAttribute('data-id')); });
+      });
+    }
+
+    function chargerPourModification(id) {
+      var course = coursActuels.filter(function (c) { return c.id === id; })[0];
+      if (!course) return;
+
+      champId.value = course.id;
+      document.getElementById('titre').value = course.titre;
+      document.getElementById('niveau').value = course.niveau;
+      document.getElementById('prix').value = course.prix;
+      document.getElementById('date').value = course.date;
+      document.getElementById('heure').value = course.heure;
+      document.getElementById('lieu').value = course.lieu;
+      document.getElementById('places').value = course.places;
+
+      titreFormulaire.textContent = 'Modifier le cours';
+      btnEnregistrer.textContent = 'Enregistrer les modifications';
+      btnAnnuler.classList.remove('cache');
+      messageForm.classList.add('cache');
+      window.scrollTo(0, 0);
+    }
+
+    function reinitialiserFormulaire() {
+      formCours.reset();
+      champId.value = '';
+      titreFormulaire.textContent = 'Créer un cours';
+      btnEnregistrer.textContent = 'Créer le cours';
+      btnAnnuler.classList.add('cache');
+      messageForm.classList.add('cache');
+    }
+
+    btnAnnuler.addEventListener('click', reinitialiserFormulaire);
+
+    function supprimerCours(id) {
+      var course = coursActuels.filter(function (c) { return c.id === id; })[0];
+      var nom = course ? course.titre : 'ce cours';
+      if (!window.confirm('Supprimer définitivement "' + nom + '" ?')) return;
+
+      appelApi('/api/admin-courses?id=' + encodeURIComponent(id), { method: 'DELETE' })
+        .then(function (res) {
+          if (!res.ok && res.status !== 204) throw new Error('La suppression a échoué.');
+          return chargerListe();
+        })
+        .catch(function (err) {
+          window.alert(err.message);
+        });
+    }
+
+    formCours.addEventListener('submit', function (event) {
+      event.preventDefault();
+
+      var donnees = {
+        titre: document.getElementById('titre').value.trim(),
+        niveau: document.getElementById('niveau').value,
+        prix: Number(document.getElementById('prix').value),
+        date: document.getElementById('date').value,
+        heure: document.getElementById('heure').value,
+        lieu: document.getElementById('lieu').value.trim(),
+        places: Number(document.getElementById('places').value),
+      };
+
+      var id = champId.value;
+      var estModification = Boolean(id);
+
+      if (estModification) donnees.id = id;
+
+      btnEnregistrer.disabled = true;
+
+      appelApi('/api/admin-courses', {
+        method: estModification ? 'PUT' : 'POST',
+        body: JSON.stringify(donnees),
+      })
+        .then(function (res) {
+          return res.json().then(function (data) { return { ok: res.ok, data: data }; });
+        })
+        .then(function (result) {
+          if (!result.ok) throw new Error((result.data && result.data.error) || 'Erreur lors de l\'enregistrement.');
+          afficherMessageForm(estModification ? 'Cours modifié avec succès.' : 'Cours créé avec succès.', 'succes');
+          reinitialiserFormulaire();
+          return chargerListe();
+        })
+        .catch(function (err) {
+          afficherMessageForm(err.message, 'erreur');
+        })
+        .finally(function () {
+          btnEnregistrer.disabled = false;
+        });
+    });
+
+    // Reconnexion automatique si un mot de passe est déjà en mémoire de session
+    if (motDePasse) {
+      chargerListe()
+        .then(function () {
+          ecranConnexion.classList.add('cache');
+          ecranDashboard.classList.remove('cache');
+        })
+        .catch(function () {
+          motDePasse = '';
+        });
+    }
+  </script>
+</body>
+</html>
