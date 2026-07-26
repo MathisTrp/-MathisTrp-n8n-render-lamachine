@@ -91,7 +91,25 @@ Plus bas, la section "Inscriptions" liste chaque cliente inscrite (prénom, nom,
 
 Important : une inscription est enregistrée dès que la cliente clique sur "Réserver et payer" et obtient son lien SumUp — pas seulement une fois le paiement confirmé (voir la section suivante sur le webhook). Si une cliente abandonne son paiement en cours de route, pensez à annuler son inscription depuis l'admin pour libérer la place.
 
-## 8. Le webhook SumUp (pour plus tard)
+## 8. Les e-mails automatiques (Resend)
+
+Dès qu'une cliente réserve un cours, deux e-mails peuvent partir automatiquement :
+- Un e-mail de confirmation à la cliente, avec les détails du cours.
+- Un e-mail de notification à l'administratrice, avec le nom et l'e-mail de la cliente.
+
+C'est **optionnel** : tant que les variables ci-dessous ne sont pas renseignées, ces e-mails sont simplement ignorés — le site continue de fonctionner normalement (paiement, inscriptions, etc.).
+
+Pour les activer :
+
+1. Créez un compte sur [resend.com](https://resend.com) (gratuit pour un usage modeste).
+2. Dans le dashboard Resend, allez dans **API Keys** et créez une clé : ce sera `RESEND_API_KEY`.
+3. Pour l'adresse d'expédition (`EMAIL_FROM`), deux options :
+   - **Pour tester rapidement**, utilisez `Cours de porcelaine <onboarding@resend.dev>` — ça fonctionne sans configuration, mais Resend peut limiter les destinataires en mode test (voir leur documentation).
+   - **Pour un usage réel**, allez dans **Domains** sur Resend, ajoutez votre propre nom de domaine (par exemple celui de votre site) et suivez leurs instructions pour ajouter les enregistrements DNS demandés. Une fois le domaine vérifié, utilisez une adresse de ce domaine, par exemple `Cours de porcelaine <inscriptions@votredomaine.com>`.
+4. Renseignez `ADMIN_EMAIL` avec l'adresse e-mail de l'administratrice (celle qui recevra une notification à chaque inscription).
+5. Ajoutez ces trois variables (`RESEND_API_KEY`, `EMAIL_FROM`, `ADMIN_EMAIL`) dans votre `.env` local et/ou dans les variables d'environnement Vercel, puis redéployez si besoin.
+
+## 9. Le webhook SumUp (pour plus tard)
 
 Le fichier `api/webhook.js` contient un squelette prêt à activer : il servira à confirmer automatiquement un paiement et à incrémenter le nombre d'inscrits d'un cours dès que la cliente a réellement payé (plutôt que de faire confiance au simple retour vers la page "Merci"). Les étapes pour l'activer sont détaillées en commentaire dans ce fichier. Tant qu'il n'est pas activé, il se contente de recevoir les notifications de SumUp et de répondre "OK" sans rien faire d'autre — cela ne bloque en rien le fonctionnement du site.
 
@@ -120,7 +138,8 @@ cours-porcelaine/
 │   ├── webhook.js           squelette du futur webhook SumUp
 │   ├── _store.js             stockage des cours (fichier JSON)
 │   ├── _registrations.js      stockage des inscriptions (fichier JSON)
-│   └── _auth.js                 vérification du mot de passe admin
+│   ├── _email.js                envoi des e-mails via Resend (optionnel)
+│   └── _auth.js                   vérification du mot de passe admin
 ├── data/
 │   ├── courses.seed.json      cours de départ (versionnés dans le repo)
 │   └── registrations.seed.json  inscriptions de départ (vide)
