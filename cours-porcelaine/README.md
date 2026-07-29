@@ -70,7 +70,7 @@ Le mot de passe de la page `/admin` est entièrement contrôlé par la variable 
 - En local : modifiez la ligne `ADMIN_PASSWORD=...` dans votre fichier `.env`, puis relancez `npx vercel dev`.
 - En ligne : dans Vercel, allez dans **Project Settings → Environment Variables**, modifiez `ADMIN_PASSWORD`, puis redéployez le site.
 
-Il n'y a pas de compte utilisateur ni d'inscription : un seul mot de passe protège toute la page d'administration.
+Il n'y a pas de compte utilisateur ni d'inscription : un seul mot de passe protège toute la page d'administration. Un petit bouton en forme d'œil, à droite du champ de saisie sur l'écran de connexion, permet d'afficher ou de masquer le mot de passe pendant que vous le tapez (pratique pour vérifier qu'il n'y a pas de faute de frappe). Il n'y a volontairement pas d'option pour changer le mot de passe directement depuis le site : cela reste plus fiable de passer par Vercel comme décrit ci-dessus.
 
 ## 6. Créer votre premier cours
 
@@ -82,6 +82,10 @@ Il n'y a pas de compte utilisateur ni d'inscription : un seul mot de passe prot�
 6. Vous pouvez à tout moment "Modifier" ou "Supprimer" un cours depuis cette même page, et voir en un coup d'œil le nombre d'inscrits et de places restantes (ces chiffres ne sont jamais visibles côté public — les élèves voient seulement "Ouvert" ou "Complet").
 
 Des cours d'exemple sont déjà présents (`data/courses.seed.json`) pour que vous puissiez tester tout de suite ; vous pouvez les modifier ou les supprimer depuis l'admin dès que vous êtes prête à les remplacer par vos vrais cours.
+
+**Stage sur plusieurs jours :** si un stage dure plusieurs jours (par exemple un week-end), remplissez en plus le champ "Date de fin" du formulaire. Sur le calendrier (public et admin), les cours d'un seul jour apparaissent sous forme de petit point de couleur, et les stages sur plusieurs jours sous forme de ligne continue colorée qui traverse tous les jours concernés — cela permet de repérer en un coup d'œil la durée d'un stage. Les cours et les stages ont chacun leur propre couleur (voir la légende sous chaque calendrier).
+
+Des inscriptions fictives sont également présentes dès le départ (`data/registrations.seed.json`) uniquement pour que vous puissiez voir à quoi ressemble la section "Inscriptions" une fois remplie (noms, e-mails, cours). Ce sont des exemples de démonstration : vous pouvez les annuler ou attendre qu'elles disparaissent naturellement lorsque vous supprimerez les cours d'exemple auxquels elles sont rattachées, avant l'ouverture réelle des inscriptions.
 
 ## 7. Le tableau de bord : inscriptions et statistiques
 
@@ -142,7 +146,7 @@ cours-porcelaine/
 │   └── _auth.js                   vérification du mot de passe admin
 ├── data/
 │   ├── courses.seed.json      cours de départ (versionnés dans le repo)
-│   └── registrations.seed.json  inscriptions de départ (vide)
+│   └── registrations.seed.json  inscriptions de départ (exemples de démonstration)
 ├── .env.example
 ├── vercel.json
 └── package.json

@@ -13,6 +13,28 @@
     return year + '-' + pad(month + 1) + '-' + pad(day);
   }
 
+  // Construit, pour un calendrier, une map date -> liste d'événements qui
+  // touchent cette date (utile pour que les événements sur plusieurs jours
+  // apparaissent sur chacun de leurs jours, pas seulement le premier).
+  function etalerEvenements(courses) {
+    var parJour = {};
+    courses.forEach(function (course) {
+      var debut = new Date(course.date + 'T00:00:00');
+      var fin = new Date((course.dateFin || course.date) + 'T00:00:00');
+      if (isNaN(debut.getTime())) return;
+      if (isNaN(fin.getTime()) || fin < debut) fin = debut;
+
+      var curseur = new Date(debut.getTime());
+      while (curseur <= fin) {
+        var key = dateToKey(curseur.getFullYear(), curseur.getMonth(), curseur.getDate());
+        if (!parJour[key]) parJour[key] = [];
+        parJour[key].push(course);
+        curseur.setDate(curseur.getDate() + 1);
+      }
+    });
+    return parJour;
+  }
+
   function creerCalendrier(config) {
     var container = config.container;
     var year = config.year;
@@ -48,17 +70,39 @@
       var classes = 'calendrier-case';
       if (key === todayKey) classes += ' aujourdhui';
       if (config.dateSelectionnee === key) classes += ' selectionne';
-
-      if (evenements.length) {
-        var ouvert = evenements.some(function (e) { return !e.complet; });
-        classes += ' avec-cours ' + (ouvert ? 'cours-ouvert' : 'cours-complet');
-      }
+      if (evenements.length) classes += ' avec-cours';
 
       html += '<button type="button" class="' + classes + '" data-date="' + key + '">';
       html += '<span class="calendrier-numero">' + jour + '</span>';
-      if (evenements.length) {
-        html += '<span class="calendrier-pastille"></span>';
-      }
+
+      // Sépare les événements d'un seul jour (pastille) de ceux qui
+      // s'étalent sur plusieurs jours (barre continue).
+      var pointsSimples = [];
+      var barres = [];
+      evenements.forEach(function (e) {
+        if ((e.dateFin || e.date) === e.date) {
+          pointsSimples.push(e);
+        } else {
+          barres.push(e);
+        }
+      });
+
+      var typesPresents = ['cours', 'stage'].filter(function (type) {
+        return pointsSimples.some(function (e) { return (e.type || 'cours') === type; });
+      });
+      typesPresents.forEach(function (type) {
+        var duType = pointsSimples.filter(function (e) { return (e.type || 'cours') === type; });
+        var complet = duType.every(function (e) { return e.complet; });
+        var seule = typesPresents.length === 1 ? ' seule' : '';
+        html += '<span class="calendrier-pastille pastille-' + type + seule + (complet ? ' complet' : '') + '"></span>';
+      });
+
+      barres.forEach(function (e) {
+        var type = e.type || 'cours';
+        var position = e.date === key ? 'debut' : ((e.dateFin || e.date) === key ? 'fin' : 'milieu');
+        html += '<span class="calendrier-barre barre-' + type + ' barre-' + position + (e.complet ? ' complet' : '') + '"></span>';
+      });
+
       html += '</button>';
     }
     html += '</div>';
@@ -82,5 +126,5 @@
     });
   }
 
-  global.CalendrierPorcelaine = { creer: creerCalendrier, dateToKey: dateToKey };
+  global.CalendrierPorcelaine = { creer: creerCalendrier, dateToKey: dateToKey, etalerEvenements: etalerEvenements };
 })(window);

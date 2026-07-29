@@ -32,6 +32,7 @@ module.exports = (req, res) => {
       niveau: c.niveau,
       prix: c.prix,
       date: c.date,
+      dateFin: c.dateFin || c.date,
       heure: c.heure,
       duree: c.duree,
       lieu: c.lieu,

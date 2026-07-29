@@ -63,6 +63,7 @@ function toAdminView(course) {
     niveau: course.niveau,
     prix: course.prix,
     date: course.date,
+    dateFin: course.dateFin || course.date,
     heure: course.heure,
     duree: course.duree,
     lieu: course.lieu,
@@ -112,7 +113,7 @@ module.exports = async (req, res) => {
       return;
     }
 
-    const { titre, type, niveau, prix, date, heure, duree, lieu, places, recurrence, nombreSeances } = body || {};
+    const { titre, type, niveau, prix, date, dateFin, heure, duree, lieu, places, recurrence, nombreSeances } = body || {};
     if (!titre || !niveau || !prix || !date || !heure || !duree || !lieu || !places) {
       res.status(400).json({ error: 'Merci de remplir tous les champs.' });
       return;
@@ -122,7 +123,7 @@ module.exports = async (req, res) => {
     const pas = PAS_RECURRENCE[recurrence];
 
     if (!pas) {
-      const course = createCourse({ ...champsCommuns, date });
+      const course = createCourse({ ...champsCommuns, date, dateFin: dateFin || date });
       res.status(201).json(toAdminView(course));
       return;
     }
@@ -131,7 +132,8 @@ module.exports = async (req, res) => {
     const recurrenceId = crypto.randomUUID();
     const coursCrees = [];
     for (let i = 0; i < total; i += 1) {
-      coursCrees.push(createCourse({ ...champsCommuns, date: ajouterJours(date, i * pas), recurrenceId }));
+      const dateSeance = ajouterJours(date, i * pas);
+      coursCrees.push(createCourse({ ...champsCommuns, date: dateSeance, dateFin: dateSeance, recurrenceId }));
     }
 
     res.status(201).json({ series: true, count: coursCrees.length, courses: coursCrees.map(toAdminView) });

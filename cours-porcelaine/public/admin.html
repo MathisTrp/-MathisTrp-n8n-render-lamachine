@@ -19,7 +19,10 @@
       <div class="carte">
         <h2>Connexion</h2>
         <label for="mot-de-passe">Mot de passe administrateur</label>
-        <input type="password" id="mot-de-passe" autocomplete="current-password" />
+        <div class="champ-mot-de-passe">
+          <input type="password" id="mot-de-passe" autocomplete="current-password" />
+          <button type="button" class="bouton-oeil" id="btn-oeil" aria-label="Afficher le mot de passe">👁</button>
+        </div>
         <button type="button" class="bouton pleine-largeur" id="btn-connexion" style="margin-top:1.1rem;">Se connecter</button>
         <div id="message-connexion" class="message erreur cache"></div>
       </div>
@@ -109,6 +112,9 @@
             </div>
           </div>
 
+          <label for="date-fin">Date de fin (si le stage dure plusieurs jours)</label>
+          <input type="date" id="date-fin" />
+
           <label for="lieu">Lieu</label>
           <input type="text" id="lieu" required />
 
@@ -144,7 +150,11 @@
       <h2 class="section-titre">Calendrier</h2>
       <div class="carte">
         <div id="calendrier-admin" class="calendrier"></div>
-        <p class="aide-calendrier">Cliquez sur une date avec un cours pour le voir ou le modifier. Cliquez sur une date vide pour créer un cours ce jour-là.</p>
+        <div class="calendrier-legende">
+          <span><span class="puce cours"></span>Cours</span>
+          <span><span class="puce stage"></span>Stage</span>
+        </div>
+        <p class="aide-calendrier">Cliquez sur une date avec un cours pour le voir ou le modifier. Cliquez sur une date vide pour créer un cours ce jour-là. Une ligne continue indique un stage sur plusieurs jours.</p>
         <div id="jour-admin"></div>
       </div>
 
@@ -187,6 +197,7 @@
     var ecranConnexion = document.getElementById('ecran-connexion');
     var ecranDashboard = document.getElementById('ecran-dashboard');
     var champMotDePasse = document.getElementById('mot-de-passe');
+    var btnOeil = document.getElementById('btn-oeil');
     var btnConnexion = document.getElementById('btn-connexion');
     var btnDeconnexion = document.getElementById('btn-deconnexion');
     var messageConnexion = document.getElementById('message-connexion');
@@ -194,6 +205,7 @@
     var formCours = document.getElementById('form-cours');
     var champId = document.getElementById('cours-id');
     var champDate = document.getElementById('date');
+    var champDateFin = document.getElementById('date-fin');
     var champTitre = document.getElementById('titre');
     var groupeRecurrence = document.getElementById('groupe-recurrence');
     var champRecurrence = document.getElementById('recurrence');
@@ -264,6 +276,13 @@
       if (e.key === 'Enter') connecter();
     });
 
+    btnOeil.addEventListener('click', function () {
+      var visible = champMotDePasse.type === 'text';
+      champMotDePasse.type = visible ? 'password' : 'text';
+      btnOeil.setAttribute('aria-label', visible ? 'Afficher le mot de passe' : 'Masquer le mot de passe');
+      champMotDePasse.focus();
+    });
+
     btnDeconnexion.addEventListener('click', function () {
       sessionStorage.removeItem(CLE_SESSION);
       location.reload();
@@ -305,6 +324,17 @@
       return texte + (heureStr ? ' à ' + heureStr : '');
     }
 
+    function estMultiJours(course) {
+      return course.dateFin && course.dateFin !== course.date;
+    }
+
+    function formaterQuand(course) {
+      if (!estMultiJours(course)) return formaterDateHeure(course.date, course.heure);
+      var fin = new Date(course.dateFin + 'T00:00:00');
+      var texteFin = isNaN(fin.getTime()) ? course.dateFin : fin.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+      return 'Du ' + formaterDateHeure(course.date, course.heure) + ' au ' + texteFin;
+    }
+
     function construireLigneHTML(course) {
       var statutClasse = course.complet ? 'complet' : 'ouvert';
       var statutTexte = course.complet ? 'Complet' : 'Ouvert';
@@ -315,7 +345,7 @@
       return (
         '<tr>' +
         '<td class="col-large"><strong>' + echapper(course.titre) + '</strong><br><span style="color:var(--texte-doux)">' + echapper(course.niveau) + typeTexte + '</span></td>' +
-        '<td>' + echapper(formaterDateHeure(course.date, course.heure)) + ' · ' + echapper(course.duree || '') + '<br>' + echapper(course.lieu) + '</td>' +
+        '<td>' + echapper(formaterQuand(course)) + ' · ' + echapper(course.duree || '') + '<br>' + echapper(course.lieu) + '</td>' +
         '<td>' + echapper(course.prix) + ' €</td>' +
         '<td>' + echapper(course.inscrits) + ' / ' + echapper(course.places) + '<br><span style="color:var(--texte-doux)">' + echapper(course.placesRestantes) + ' restante(s)</span></td>' +
         '<td><span class="statut ' + statutClasse + '">' + statutTexte + '</span></td>' +
@@ -376,11 +406,7 @@
     }
 
     function afficherCalendrierAdmin() {
-      var eventsParJour = {};
-      coursActuels.forEach(function (course) {
-        if (!eventsParJour[course.date]) eventsParJour[course.date] = [];
-        eventsParJour[course.date].push(course);
-      });
+      var eventsParJour = CalendrierPorcelaine.etalerEvenements(coursActuels);
 
       CalendrierPorcelaine.creer({
         container: calendrierAdminEl,
@@ -435,6 +461,7 @@
       document.getElementById('prix').value = course.prix;
       document.getElementById('duree').value = course.duree || '1 heure';
       document.getElementById('date').value = course.date;
+      champDateFin.value = (course.dateFin && course.dateFin !== course.date) ? course.dateFin : '';
       document.getElementById('heure').value = course.heure;
       document.getElementById('lieu').value = course.lieu;
       document.getElementById('places').value = course.places;
@@ -497,6 +524,7 @@
         prix: Number(document.getElementById('prix').value),
         duree: document.getElementById('duree').value,
         date: document.getElementById('date').value,
+        dateFin: champDateFin.value || document.getElementById('date').value,
         heure: document.getElementById('heure').value,
         lieu: document.getElementById('lieu').value.trim(),
         places: Number(document.getElementById('places').value),

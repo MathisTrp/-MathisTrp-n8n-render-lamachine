@@ -20,7 +20,11 @@
         <p class="info">Chargement des cours…</p>
       </div>
       <div id="calendrier-public" class="calendrier cache"></div>
-      <p id="aide-calendrier" class="aide-calendrier cache">Cliquez sur une date en couleur pour voir le cours du jour.</p>
+      <div id="legende-calendrier" class="calendrier-legende cache">
+        <span><span class="puce cours"></span>Cours</span>
+        <span><span class="puce stage"></span>Stage</span>
+      </div>
+      <p id="aide-calendrier" class="aide-calendrier cache">Cliquez sur une date en couleur pour voir le cours du jour. Une ligne continue indique un stage sur plusieurs jours.</p>
       <div id="jour-selectionne"></div>
     </section>
 
@@ -62,6 +66,7 @@
     var ecranForm = document.getElementById('ecran-form');
     var etatChargement = document.getElementById('etat-chargement');
     var calendrierEl = document.getElementById('calendrier-public');
+    var legendeCalendrier = document.getElementById('legende-calendrier');
     var aideCalendrier = document.getElementById('aide-calendrier');
     var jourSelectionneEl = document.getElementById('jour-selectionne');
     var recapEl = document.getElementById('recap-cours');
@@ -84,6 +89,21 @@
       return texte.charAt(0).toUpperCase() + texte.slice(1);
     }
 
+    function formaterJourMois(dateStr) {
+      var d = new Date(dateStr + 'T00:00:00');
+      if (isNaN(d.getTime())) return dateStr;
+      return d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' });
+    }
+
+    function estMultiJours(course) {
+      return course.dateFin && course.dateFin !== course.date;
+    }
+
+    function formaterPlage(course) {
+      if (!estMultiJours(course)) return formaterDate(course.date);
+      return 'Du ' + formaterJourMois(course.date) + ' au ' + formaterDate(course.dateFin);
+    }
+
     function chargerCours() {
       fetch('/api/courses')
         .then(function (res) { return res.json(); })
@@ -104,17 +124,14 @@
 
       etatChargement.innerHTML = '';
 
-      eventsParJour = {};
-      courses.forEach(function (course) {
-        if (!eventsParJour[course.date]) eventsParJour[course.date] = [];
-        eventsParJour[course.date].push(course);
-      });
+      eventsParJour = CalendrierPorcelaine.etalerEvenements(courses);
 
       var premiereDate = new Date(courses[0].date + 'T00:00:00');
       calYear = premiereDate.getFullYear();
       calMonth = premiereDate.getMonth();
 
       calendrierEl.classList.remove('cache');
+      legendeCalendrier.classList.remove('cache');
       aideCalendrier.classList.remove('cache');
       afficherCalendrier();
     }
@@ -145,17 +162,19 @@
     }
 
     function carteHTML(course) {
-      var classes = 'course-card' + (course.complet ? ' complet' : '');
+      var estStage = course.type === 'stage';
+      var classes = 'course-card' + (estStage ? ' stage' : '') + (course.complet ? ' complet' : '');
       var html = '<button type="button" class="' + classes + '" data-id="' + course.id + '"' + (course.complet ? ' disabled' : '') + '>';
       if (course.complet) {
         html += '<span class="badge">Complet</span>';
       }
       html += '<h2>' + echapper(course.titre) + '</h2>';
+      html += '<span class="niveau niveau-type-' + (estStage ? 'stage' : 'cours') + '">' + (estStage ? 'Stage' : 'Cours') + '</span>';
       html += '<span class="niveau">' + echapper(course.niveau) + '</span>';
-      if (course.type === 'stage') {
-        html += '<span class="niveau niveau-stage">Stage</span>';
+      if (estMultiJours(course)) {
+        html += '<p class="plage-dates"><span class="trait"></span>' + echapper(formaterPlage(course)) + '</p>';
       }
-      html += '<p class="details">' + echapper(formaterDate(course.date)) + ' à ' + echapper(course.heure) + (course.duree ? ' · ' + echapper(course.duree) : '') + '</p>';
+      html += '<p class="details">' + (estMultiJours(course) ? 'À partir de ' + echapper(course.heure) : echapper(formaterDate(course.date)) + ' à ' + echapper(course.heure)) + (course.duree ? ' · ' + echapper(course.duree) : '') + '</p>';
       html += '<p class="details">' + echapper(course.lieu) + '</p>';
       html += '<p class="prix">' + echapper(course.prix) + ' €</p>';
       html += '</button>';
@@ -192,8 +211,8 @@
 
       recapEl.innerHTML =
         '<h2>' + echapper(course.titre) + '</h2>' +
-        '<p>' + echapper(course.niveau) + (course.type === 'stage' ? ' · Stage' : '') + '</p>' +
-        '<p>' + echapper(formaterDate(course.date)) + ' à ' + echapper(course.heure) + (course.duree ? ' · ' + echapper(course.duree) : '') + '</p>' +
+        '<p>' + (course.type === 'stage' ? 'Stage' : 'Cours') + ' · ' + echapper(course.niveau) + '</p>' +
+        '<p>' + echapper(formaterPlage(course)) + (estMultiJours(course) ? ', à partir de ' : ' à ') + echapper(course.heure) + (course.duree ? ' · ' + echapper(course.duree) : '') + '</p>' +
         '<p>' + echapper(course.lieu) + '</p>' +
         '<p><strong>' + echapper(course.prix) + ' €</strong></p>';
 

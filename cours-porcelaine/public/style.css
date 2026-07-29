@@ -6,6 +6,9 @@
   --rose-doux: #f8ece9;
   --or: #b8935e;
   --or-clair: #d9b878;
+  --stage: #8d6fa8;
+  --stage-clair: #ab8fc4;
+  --stage-doux: #efe8f5;
   --texte: #3a2e2a;
   --texte-doux: #6b5c56;
   --succes: #3f6e4f;
@@ -90,6 +93,10 @@ h1, h2, h3 {
   box-shadow: 0 10px 24px var(--ombre);
 }
 
+.course-card.stage {
+  border-left-color: var(--stage);
+}
+
 .course-card:disabled,
 .course-card.complet {
   cursor: not-allowed;
@@ -114,9 +121,38 @@ h1, h2, h3 {
   margin-right: 0.4rem;
 }
 
-.course-card .niveau.niveau-stage {
+.course-card .niveau.niveau-type-cours {
+  background: var(--rose-doux);
+  color: var(--or);
+  border: 1.5px solid rgba(184, 147, 94, 0.5);
+}
+
+.course-card .niveau.niveau-type-stage {
+  background: var(--stage-doux);
+  color: var(--stage);
+  border: 1.5px solid rgba(141, 111, 168, 0.5);
+}
+
+.course-card .plage-dates {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--texte-doux);
+  margin: 0 0 0.6rem;
+}
+
+.course-card .plage-dates .trait {
+  display: inline-block;
+  width: 22px;
+  height: 4px;
+  border-radius: 2px;
   background: var(--or);
-  color: #fff;
+}
+
+.course-card.stage .plage-dates .trait {
+  background: var(--stage);
 }
 
 .course-card .details {
@@ -399,25 +435,113 @@ input:focus, select:focus {
 .calendrier-numero {
   font-size: 1rem;
   font-weight: 700;
+  z-index: 1;
 }
 
 .calendrier-pastille {
   position: absolute;
-  bottom: 5px;
-  left: 50%;
-  transform: translateX(-50%);
+  bottom: 8px;
   width: 7px;
   height: 7px;
   border-radius: 50%;
   background: var(--or);
 }
 
-.calendrier-case.cours-complet .calendrier-pastille {
-  background: #8d857f;
+.calendrier-pastille.pastille-cours {
+  background: var(--or);
+  left: calc(50% - 6px);
+}
+
+.calendrier-pastille.pastille-stage {
+  background: var(--stage);
+  left: calc(50% + 6px);
+}
+
+/* Une seule pastille présente : on la recentre */
+.calendrier-pastille.seule {
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.calendrier-pastille.complet {
+  opacity: 0.4;
 }
 
 .calendrier-case.selectionne .calendrier-pastille {
   background: #fff;
+  opacity: 1;
+}
+
+.calendrier-barre {
+  position: absolute;
+  bottom: 5px;
+  height: 6px;
+  z-index: 0;
+}
+
+.calendrier-barre.barre-debut {
+  left: 3px;
+  right: -0.2rem;
+  border-radius: 4px 0 0 4px;
+}
+
+.calendrier-barre.barre-milieu {
+  left: -0.2rem;
+  right: -0.2rem;
+}
+
+.calendrier-barre.barre-fin {
+  left: -0.2rem;
+  right: 3px;
+  border-radius: 0 4px 4px 0;
+}
+
+.calendrier-barre.barre-cours {
+  background: var(--or);
+}
+
+.calendrier-barre.barre-stage {
+  background: var(--stage);
+}
+
+.calendrier-barre.complet {
+  opacity: 0.4;
+}
+
+.calendrier-case.selectionne .calendrier-barre {
+  background: #fff;
+  opacity: 1;
+}
+
+.calendrier-legende {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1.2rem;
+  justify-content: center;
+  margin-top: 1rem;
+  font-size: 0.9rem;
+  color: var(--texte-doux);
+}
+
+.calendrier-legende span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.calendrier-legende .puce {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.calendrier-legende .puce.cours {
+  background: var(--or);
+}
+
+.calendrier-legende .puce.stage {
+  background: var(--stage);
 }
 
 .jour-titre {
