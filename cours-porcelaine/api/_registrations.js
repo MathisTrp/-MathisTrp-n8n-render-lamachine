@@ -55,6 +55,7 @@ function createRegistration(data) {
     montant: data.montant,
     checkoutReference: data.checkoutReference,
     statut: 'inscrite',
+    emailEnvoye: false,
     creeLe: new Date().toISOString(),
   };
   registrations.push(registration);
@@ -71,8 +72,23 @@ function setStatutRegistration(id, statut) {
   return registrations[index];
 }
 
+function getRegistrationByReference(checkoutReference) {
+  return readAll().find((r) => r.checkoutReference === checkoutReference) || null;
+}
+
+function marquerEmailEnvoye(id) {
+  const registrations = readAll();
+  const index = registrations.findIndex((r) => r.id === id);
+  if (index === -1) return null;
+  registrations[index].emailEnvoye = true;
+  writeAll(registrations);
+  return registrations[index];
+}
+
 module.exports = {
   listRegistrations,
   createRegistration,
   setStatutRegistration,
+  getRegistrationByReference,
+  marquerEmailEnvoye,
 };

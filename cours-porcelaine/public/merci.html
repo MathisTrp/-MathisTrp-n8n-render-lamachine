@@ -16,5 +16,14 @@
       <a href="/" class="bouton" style="text-decoration:none; display:block;">Retour à l'accueil</a>
     </div>
   </div>
+
+  <script>
+    (function () {
+      var ref = new URLSearchParams(window.location.search).get('ref');
+      if (ref) {
+        fetch('/api/confirmer-inscription?ref=' + encodeURIComponent(ref)).catch(function () {});
+      }
+    })();
+  </script>
 </body>
 </html>

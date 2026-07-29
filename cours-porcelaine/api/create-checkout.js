@@ -19,17 +19,6 @@
 
 const { getCourse, estComplet, incrementInscrits } = require('./_store');
 const { createRegistration } = require('./_registrations');
-const { envoyerEmail } = require('./_email');
-
-function echapperHtml(texte) {
-  return String(texte).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-}
-
-function formaterDateFr(dateStr) {
-  const d = new Date(`${dateStr}T00:00:00`);
-  if (isNaN(d.getTime())) return dateStr;
-  return new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }).format(d);
-}
 
 function readJsonBody(req) {
   return new Promise((resolve, reject) => {
@@ -117,7 +106,7 @@ module.exports = async (req, res) => {
         checkout_reference: checkoutReference,
         description: `${course.titre} — ${prenom} ${nom}`,
         merchant_code: merchantCode,
-        redirect_url: `${baseUrl}/merci.html`,
+        redirect_url: `${baseUrl}/merci.html?ref=${encodeURIComponent(checkoutReference)}`,
         hosted_checkout: { enabled: true },
       }),
     });
@@ -131,10 +120,17 @@ module.exports = async (req, res) => {
     }
 
     // Enregistre la cliente dès que le paiement est initié, pour que
-    // l'administratrice voie qui s'est inscrite. Tant que le webhook
-    // SumUp (api/webhook.js) n'est pas activé, ceci ne confirme pas que
-    // le paiement a réellement abouti — l'administratrice peut annuler
-    // une inscription depuis l'admin si besoin (ex : paiement abandonné).
+    // l'administratrice voie qui s'est inscrite et que la place soit
+    // réservée pendant qu'elle paie. Tant que le webhook SumUp
+    // (api/webhook.js) n'est pas activé, ceci ne confirme pas que le
+    // paiement a réellement abouti — l'administratrice peut annuler une
+    // inscription depuis l'admin si besoin (ex : paiement abandonné).
+    //
+    // Les e-mails de confirmation, eux, ne partent PAS ici : ils ne sont
+    // envoyés que lorsque la cliente revient réellement sur la page
+    // "Merci" après un paiement SumUp réussi (voir merci.html et
+    // api/confirmer-inscription.js), pour ne jamais annoncer une
+    // inscription "confirmée" à quelqu'un qui aurait abandonné le paiement.
     createRegistration({
       courseId: course.id,
       prenom,
@@ -144,28 +140,6 @@ module.exports = async (req, res) => {
       checkoutReference,
     });
     incrementInscrits(course.id);
-
-    // E-mails de confirmation (cliente) et de notification (administratrice),
-    // envoyés via Resend. Si RESEND_API_KEY / EMAIL_FROM ne sont pas
-    // configurées, envoyerEmail() ne fait rien — l'inscription et le
-    // paiement fonctionnent normalement sans ça.
-    const dateFormatee = formaterDateFr(course.date);
-    const detailsCours = `${echapperHtml(course.titre)}<br/>${echapperHtml(dateFormatee)} à ${echapperHtml(course.heure)}${course.duree ? ' · ' + echapperHtml(course.duree) : ''}<br/>${echapperHtml(course.lieu)}<br/>${echapperHtml(String(course.prix))} €`;
-
-    await Promise.all([
-      envoyerEmail({
-        to: email,
-        subject: `Inscription confirmée : ${course.titre}`,
-        html: `<p>Bonjour ${echapperHtml(prenom)},</p><p>Votre inscription est bien enregistrée pour :</p><p><strong>${detailsCours}</strong></p><p>À bientôt !</p>`,
-      }),
-      process.env.ADMIN_EMAIL
-        ? envoyerEmail({
-            to: process.env.ADMIN_EMAIL,
-            subject: `Nouvelle inscription : ${prenom} ${nom} — ${course.titre}`,
-            html: `<p>Nouvelle inscription enregistrée :</p><p><strong>Cliente :</strong> ${echapperHtml(prenom)} ${echapperHtml(nom)} (${echapperHtml(email)})</p><p><strong>Cours :</strong><br/>${detailsCours}</p>`,
-          })
-        : null,
-    ]);
 
     res.status(200).json({ checkoutUrl: sumupData.hosted_checkout_url });
   } catch (error) {
