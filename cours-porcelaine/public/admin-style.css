@@ -459,99 +459,85 @@ tbody tr:hover {
   border-color: var(--accent);
 }
 
+.calendrier-case.avec-cours:hover .jour-couleur {
+  filter: brightness(1.08);
+}
+
 .calendrier-case-vide {
   visibility: hidden;
   border: none;
 }
 
 .calendrier-case.aujourdhui {
-  border-color: var(--accent);
-  border-width: 2px;
+  box-shadow: inset 0 0 0 2px var(--accent);
 }
 
 .calendrier-case.selectionne {
-  background: var(--accent);
-  color: #fff;
-  border-color: var(--accent);
+  box-shadow: inset 0 0 0 2px var(--texte);
 }
 
 .calendrier-numero {
+  position: relative;
   font-size: 0.85rem;
   font-weight: 600;
+  z-index: 1;
 }
 
-.calendrier-pastille {
+.calendrier-case.avec-cours .calendrier-numero {
+  color: #fff;
+  font-weight: 700;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+}
+
+/* Case entière coloriée selon le type (cours / stage) plutôt qu'un simple
+   point : plus lisible et plus facile à repérer d'un coup d'œil. */
+.jour-couleur {
   position: absolute;
-  bottom: 5px;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--accent);
-}
-
-.calendrier-pastille.pastille-cours {
-  background: var(--accent);
-  left: calc(50% - 5px);
-}
-
-.calendrier-pastille.pastille-stage {
-  background: var(--stage);
-  left: calc(50% + 5px);
-}
-
-.calendrier-pastille.seule {
-  left: 50%;
-  transform: translateX(-50%);
-}
-
-.calendrier-pastille.complet {
-  opacity: 0.4;
-}
-
-.calendrier-case.selectionne .calendrier-pastille {
-  background: #fff;
-  opacity: 1;
-}
-
-.calendrier-barre {
-  position: absolute;
-  bottom: 3px;
-  height: 5px;
+  inset: 0;
+  border-radius: 4px;
   z-index: 0;
+  pointer-events: none;
 }
 
-.calendrier-barre.barre-debut {
-  left: 2px;
-  right: -0.1rem;
-  border-radius: 3px 0 0 3px;
-}
-
-.calendrier-barre.barre-milieu {
-  left: -0.1rem;
-  right: -0.1rem;
-}
-
-.calendrier-barre.barre-fin {
-  left: -0.1rem;
-  right: 2px;
-  border-radius: 0 3px 3px 0;
-}
-
-.calendrier-barre.barre-cours {
+.jour-couleur.cours {
   background: var(--accent);
 }
 
-.calendrier-barre.barre-stage {
+.jour-couleur.stage {
   background: var(--stage);
 }
 
-.calendrier-barre.complet {
-  opacity: 0.4;
+.jour-couleur.complet {
+  opacity: 0.55;
 }
 
-.calendrier-case.selectionne .calendrier-barre {
-  background: #fff;
-  opacity: 1;
+/* Cours ET stage le même jour : la case est partagée en deux moitiés */
+.jour-couleur.mixte-gauche {
+  left: 0;
+  right: 50%;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.jour-couleur.mixte-droite {
+  left: 50%;
+  right: 0;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+/* Stage sur plusieurs jours : la couleur déborde dans l'espace entre les
+   cases pour donner l'impression d'un bloc continu. */
+.jour-couleur.pont-gauche {
+  left: -0.2rem;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+.jour-couleur.pont-droite {
+  right: -0.2rem;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
 }
 
 .calendrier-legende {

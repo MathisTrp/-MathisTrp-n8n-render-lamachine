@@ -73,36 +73,39 @@
       if (evenements.length) classes += ' avec-cours';
 
       html += '<button type="button" class="' + classes + '" data-date="' + key + '">';
-      html += '<span class="calendrier-numero">' + jour + '</span>';
 
-      // Sépare les événements d'un seul jour (pastille) de ceux qui
-      // s'étalent sur plusieurs jours (barre continue).
-      var pointsSimples = [];
-      var barres = [];
-      evenements.forEach(function (e) {
-        if ((e.dateFin || e.date) === e.date) {
-          pointsSimples.push(e);
-        } else {
-          barres.push(e);
-        }
-      });
-
+      // Pour chaque type (cours / stage) présent ce jour-là, on colorie
+      // toute la case (pas juste un petit point) avec la couleur du type.
+      // Si un événement s'étale sur plusieurs jours, la couleur "déborde"
+      // légèrement dans l'espace entre les cases pour donner l'impression
+      // d'un bloc continu plutôt que de cases séparées.
       var typesPresents = ['cours', 'stage'].filter(function (type) {
-        return pointsSimples.some(function (e) { return (e.type || 'cours') === type; });
+        return evenements.some(function (e) { return (e.type || 'cours') === type; });
       });
-      typesPresents.forEach(function (type) {
-        var duType = pointsSimples.filter(function (e) { return (e.type || 'cours') === type; });
+
+      typesPresents.forEach(function (type, index) {
+        var duType = evenements.filter(function (e) { return (e.type || 'cours') === type; });
         var complet = duType.every(function (e) { return e.complet; });
-        var seule = typesPresents.length === 1 ? ' seule' : '';
-        html += '<span class="calendrier-pastille pastille-' + type + seule + (complet ? ' complet' : '') + '"></span>';
+        var multiJours = duType.find(function (e) { return (e.dateFin || e.date) !== e.date; });
+
+        var cls = 'jour-couleur ' + type;
+        if (complet) cls += ' complet';
+
+        if (typesPresents.length === 2) {
+          cls += index === 0 ? ' mixte-gauche' : ' mixte-droite';
+        } else if (multiJours) {
+          var position = multiJours.date === key
+            ? 'debut'
+            : ((multiJours.dateFin || multiJours.date) === key ? 'fin' : 'milieu');
+          if (position === 'debut') cls += ' pont-droite';
+          else if (position === 'fin') cls += ' pont-gauche';
+          else cls += ' pont-gauche pont-droite';
+        }
+
+        html += '<span class="' + cls + '"></span>';
       });
 
-      barres.forEach(function (e) {
-        var type = e.type || 'cours';
-        var position = e.date === key ? 'debut' : ((e.dateFin || e.date) === key ? 'fin' : 'milieu');
-        html += '<span class="calendrier-barre barre-' + type + ' barre-' + position + (e.complet ? ' complet' : '') + '"></span>';
-      });
-
+      html += '<span class="calendrier-numero">' + jour + '</span>';
       html += '</button>';
     }
     html += '</div>';

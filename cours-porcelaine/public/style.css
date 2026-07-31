@@ -399,7 +399,7 @@ input:focus, select:focus {
 .calendrier-case {
   position: relative;
   aspect-ratio: 1 / 1;
-  border: 1px solid transparent;
+  border: none;
   border-radius: 10px;
   background: none;
   font: inherit;
@@ -416,101 +416,86 @@ input:focus, select:focus {
 
 .calendrier-case.avec-cours {
   cursor: pointer;
+}
+
+.calendrier-case:hover:not(.avec-cours) {
   background: var(--rose-doux);
 }
 
-.calendrier-case.avec-cours:hover {
-  background: var(--rose-poudre);
+.calendrier-case.avec-cours:hover .jour-couleur {
+  filter: brightness(1.08);
 }
 
 .calendrier-case.aujourdhui {
-  border-color: var(--or);
+  box-shadow: inset 0 0 0 2px var(--or);
 }
 
 .calendrier-case.selectionne {
-  background: var(--or);
-  color: #fff;
+  box-shadow: inset 0 0 0 3px var(--texte);
 }
 
 .calendrier-numero {
-  font-size: 1rem;
+  position: relative;
+  font-size: 1.05rem;
   font-weight: 700;
   z-index: 1;
 }
 
-.calendrier-pastille {
+.calendrier-case.avec-cours .calendrier-numero {
+  color: #fff;
+  font-weight: 800;
+  text-shadow: 0 1px 3px rgba(58, 46, 42, 0.55);
+}
+
+/* Case entière coloriée selon le type (cours / stage) plutôt qu'un simple
+   point : plus lisible et plus facile à repérer d'un coup d'œil. */
+.jour-couleur {
   position: absolute;
-  bottom: 8px;
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--or);
-}
-
-.calendrier-pastille.pastille-cours {
-  background: var(--or);
-  left: calc(50% - 6px);
-}
-
-.calendrier-pastille.pastille-stage {
-  background: var(--stage);
-  left: calc(50% + 6px);
-}
-
-/* Une seule pastille présente : on la recentre */
-.calendrier-pastille.seule {
-  left: 50%;
-  transform: translateX(-50%);
-}
-
-.calendrier-pastille.complet {
-  opacity: 0.4;
-}
-
-.calendrier-case.selectionne .calendrier-pastille {
-  background: #fff;
-  opacity: 1;
-}
-
-.calendrier-barre {
-  position: absolute;
-  bottom: 5px;
-  height: 6px;
+  inset: 0;
+  border-radius: 8px;
   z-index: 0;
+  pointer-events: none;
 }
 
-.calendrier-barre.barre-debut {
-  left: 3px;
-  right: -0.2rem;
-  border-radius: 4px 0 0 4px;
-}
-
-.calendrier-barre.barre-milieu {
-  left: -0.2rem;
-  right: -0.2rem;
-}
-
-.calendrier-barre.barre-fin {
-  left: -0.2rem;
-  right: 3px;
-  border-radius: 0 4px 4px 0;
-}
-
-.calendrier-barre.barre-cours {
+.jour-couleur.cours {
   background: var(--or);
 }
 
-.calendrier-barre.barre-stage {
+.jour-couleur.stage {
   background: var(--stage);
 }
 
-.calendrier-barre.complet {
-  opacity: 0.4;
+.jour-couleur.complet {
+  opacity: 0.55;
 }
 
-.calendrier-case.selectionne .calendrier-barre {
-  background: #fff;
-  opacity: 1;
+/* Cours ET stage le même jour : la case est partagée en deux moitiés */
+.jour-couleur.mixte-gauche {
+  left: 0;
+  right: 50%;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.jour-couleur.mixte-droite {
+  left: 50%;
+  right: 0;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+/* Stage sur plusieurs jours : la couleur déborde dans l'espace entre les
+   cases pour donner l'impression d'un bloc continu. */
+.jour-couleur.pont-gauche {
+  left: -0.3rem;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+.jour-couleur.pont-droite {
+  right: -0.3rem;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
 }
 
 .calendrier-legende {
